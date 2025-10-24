@@ -295,6 +295,9 @@ const Chat = () => {
         title: "Success",
         description: "Image generated successfully!",
       });
+      
+      // Scroll to show the generated image
+      setTimeout(scrollToBottom, 100);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -310,6 +313,9 @@ const Chat = () => {
     if (!session) return;
 
     setIsLoading(true);
+
+    // Scroll to bottom when user sends a message
+    setTimeout(scrollToBottom, 100);
 
     // Handle image generation
     if (selectedModel === "image-generator") {
@@ -403,7 +409,7 @@ const Chat = () => {
             messages: [
               {
                 role: "system",
-                content: "You are a helpful AI assistant. Keep your answers clear, concise, and friendly.",
+                content: "You are Groove AI, a friendly and energetic AI assistant with a passion for helping people. You communicate with enthusiasm and clarity, making complex topics easy to understand. You're knowledgeable, patient, and always eager to assist. You have a warm, approachable personality and enjoy building genuine connections with users. You're modern, tech-savvy, and stay current with the latest trends. Keep your responses clear, engaging, and conversational.",
               },
               ...optimizedMessages,
             ],
