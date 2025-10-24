@@ -363,10 +363,16 @@ const Chat = () => {
 
     // Call AI chat function
     try {
+      // Prepare all messages including the new user message
       const allMessages = [...messages, userMessage].map((m) => ({
         role: m.role,
         content: m.content,
       }));
+
+      // Optimize context if conversation is getting too long (keep last 20 messages)
+      const optimizedMessages = allMessages.length > 20 
+        ? allMessages.slice(-20) 
+        : allMessages;
 
       const apiKey = import.meta.env.VITE_GROQ_API_KEY;
       if (!apiKey) {
@@ -388,7 +394,7 @@ const Chat = () => {
                 role: "system",
                 content: "You are a helpful AI assistant. Keep your answers clear, concise, and friendly.",
               },
-              ...allMessages,
+              ...optimizedMessages,
             ],
             stream: true,
           }),
