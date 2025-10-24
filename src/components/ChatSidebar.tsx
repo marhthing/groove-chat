@@ -115,10 +115,10 @@ export const ChatSidebar = ({
   const sidebarContent = (
     <div className="flex flex-col h-full">
       <div className="p-3 border-b border-sidebar-border">
-        <h1 className="text-lg font-semibold mb-3 px-1">{BRAND_NAME}</h1>
+        <h1 className="text-lg font-semibold mb-3">{BRAND_NAME}</h1>
         <Button
           onClick={onNewChat}
-          className="w-full justify-start gap-2 text-sm px-3"
+          className="w-full justify-start gap-2 text-sm"
           variant="default"
           data-testid="button-new-chat"
         >
@@ -127,8 +127,8 @@ export const ChatSidebar = ({
         </Button>
       </div>
 
-      <ScrollArea className="flex-1 py-2 md:py-3">
-        <div className="space-y-1 px-2 md:px-3">
+      <ScrollArea className="flex-1">
+        <div className="space-y-1 p-3">
           {conversations.map((conv) => (
             <div
               key={conv.id}
@@ -141,7 +141,7 @@ export const ChatSidebar = ({
                   onSelectConversation(conv.id);
                   if (window.innerWidth < 768) onToggle();
                 }}
-                className="w-full text-left py-2 pl-2 pr-8 rounded-lg transition-colors flex items-start gap-2 hover:bg-sidebar-accent"
+                className="w-full text-left py-2 pl-3 pr-8 rounded-lg transition-colors flex items-start gap-2 hover:bg-sidebar-accent"
                 data-testid={`button-conversation-${conv.id}`}
               >
                 <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0" />
@@ -196,7 +196,7 @@ export const ChatSidebar = ({
         <Button
           onClick={handleLogout}
           variant="ghost"
-          className="w-full justify-start gap-2 text-sm px-3"
+          className="w-full justify-start gap-2 text-sm"
           data-testid="button-logout"
         >
           <LogOut className="h-4 w-4" />
