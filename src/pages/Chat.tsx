@@ -245,13 +245,24 @@ const Chat = () => {
       }));
 
       const response = await fetch(
-        `/api/chat`,
+        `https://api.groq.com/openai/v1/chat/completions`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
           },
-          body: JSON.stringify({ messages: allMessages }),
+          body: JSON.stringify({ 
+            model: "mixtral-8x7b-32768",
+            messages: [
+              {
+                role: "system",
+                content: "You are a helpful AI assistant. Keep your answers clear, concise, and friendly.",
+              },
+              ...allMessages,
+            ],
+            stream: true,
+          }),
         }
       );
 
