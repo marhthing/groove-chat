@@ -1,4 +1,4 @@
-import { User, Bot } from "lucide-react";
+import { User } from "lucide-react";
 import { BRAND_NAME } from "@/lib/constants";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useEffect } from "react";
@@ -58,9 +58,10 @@ export const ChatMessage = ({ role, content }: ChatMessageProps) => {
         ) : (
           // AI message - left aligned
           <div className="flex gap-3 md:gap-4 justify-start">
-            <div className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-full bg-accent text-accent-foreground flex items-center justify-center shadow-sm">
-              <Bot className="h-4 w-4 md:h-5 md:w-5" />
-            </div>
+            <Avatar className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10">
+              <AvatarImage src="/ai.jpg" alt={BRAND_NAME} />
+              <AvatarFallback className="bg-accent text-accent-foreground">AI</AvatarFallback>
+            </Avatar>
             <div className="flex flex-col space-y-2">
               <p className="text-sm font-medium text-muted-foreground">{BRAND_NAME}</p>
               <div className="bg-card border border-border rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm max-w-[85%] md:max-w-[600px]">
