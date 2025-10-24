@@ -10,6 +10,8 @@ import { Menu, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Session } from "@supabase/supabase-js";
 import { BRAND_NAME } from "@/lib/constants";
+import { AttachedFile } from "@/components/FileAttachment";
+import { processFileUpload, createFileMessageContent } from "@/lib/fileUploadHelper";
 
 interface Message {
   id: string;
@@ -392,7 +394,7 @@ const Chat = () => {
     }
   };
 
-  const sendMessage = async (content: string) => {
+  const sendMessage = async (content: string, file?: AttachedFile) => {
     if (!session) return;
 
     setIsLoading(true);
@@ -410,6 +412,26 @@ const Chat = () => {
     if (modelToUse === "image-generator") {
       await handleImageGeneration(content);
       return;
+    }
+
+    // Process file upload if present
+    let processedDocument = null;
+    let actualContent = content;
+    
+    if (file) {
+      try {
+        processedDocument = await processFileUpload(file);
+        const { content: enhancedContent } = createFileMessageContent(content, processedDocument);
+        actualContent = enhancedContent;
+      } catch (error: any) {
+        toast({
+          title: "File Processing Error",
+          description: error.message || "Failed to process the uploaded file",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
     }
 
     // Create conversation if needed
@@ -702,6 +724,7 @@ const Chat = () => {
           onSend={sendMessage} 
           disabled={isLoading}
           placeholder={selectedModel === "image-generator" ? "Describe the image you want to generate..." : "Type your message..."}
+          allowFileUpload={selectedModel !== "image-generator"}
         />
       </div>
     </div>

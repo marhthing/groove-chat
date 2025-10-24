@@ -1,22 +1,94 @@
-import { useState } from "react";
-import { Send } from "lucide-react";
+import { useState, useRef } from "react";
+import { Send, Paperclip } from "lucide-react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
+import { FileAttachment, AttachedFile } from "./FileAttachment";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatInputProps {
-  onSend: (message: string) => void;
+  onSend: (message: string, file?: AttachedFile) => void;
   disabled?: boolean;
   placeholder?: string;
+  allowFileUpload?: boolean;
 }
 
-export const ChatInput = ({ onSend, disabled, placeholder = "Type your message..." }: ChatInputProps) => {
+export const ChatInput = ({ 
+  onSend, 
+  disabled, 
+  placeholder = "Type your message...",
+  allowFileUpload = true
+}: ChatInputProps) => {
   const [input, setInput] = useState("");
+  const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+
+  const getFileType = (file: File): AttachedFile['type'] => {
+    const mimeType = file.type;
+    if (mimeType.startsWith('image/')) return 'image';
+    if (mimeType === 'application/pdf') return 'pdf';
+    if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return 'docx';
+    if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return 'excel';
+    return 'other';
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (20MB limit)
+    if (file.size > 20 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Maximum file size is 20MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const fileType = getFileType(file);
+
+    // Validate file type
+    const allowedTypes = ['image', 'pdf', 'docx', 'excel'];
+    if (!allowedTypes.includes(fileType)) {
+      toast({
+        title: "Unsupported file type",
+        description: "Supported: Images, PDF, Word, Excel",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Create preview for images
+    if (fileType === 'image') {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAttachedFile({
+          file,
+          preview: reader.result as string,
+          type: fileType,
+        });
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setAttachedFile({
+        file,
+        type: fileType,
+      });
+    }
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (input.trim() && !disabled) {
-      onSend(input.trim());
+    if ((input.trim() || attachedFile) && !disabled) {
+      onSend(input.trim(), attachedFile || undefined);
       setInput("");
+      setAttachedFile(null);
     }
   };
 
@@ -29,25 +101,58 @@ export const ChatInput = ({ onSend, disabled, placeholder = "Type your message..
 
   return (
     <form onSubmit={handleSubmit} className="border-t border-border bg-background p-2 md:p-3 safe-bottom">
-      <div className="max-w-4xl mx-auto flex gap-2">
-        <Textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          className="min-h-[50px] md:min-h-[60px] max-h-[150px] md:max-h-[200px] resize-none text-sm md:text-base"
-          disabled={disabled}
-          data-testid="input-message"
-        />
-        <Button 
-          type="submit" 
-          size="icon" 
-          disabled={disabled || !input.trim()}
-          className="h-[50px] w-[50px] md:h-[60px] md:w-[60px] flex-shrink-0"
-          data-testid="button-send"
-        >
-          <Send className="h-4 w-4 md:h-5 md:w-5" />
-        </Button>
+      <div className="max-w-4xl mx-auto space-y-2">
+        {attachedFile && (
+          <FileAttachment
+            attachedFile={attachedFile}
+            onRemove={() => setAttachedFile(null)}
+          />
+        )}
+        
+        <div className="flex gap-2">
+          {allowFileUpload && (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept="image/*,.pdf,.docx,.xlsx,.xls"
+                onChange={handleFileSelect}
+                disabled={disabled}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-[50px] w-[50px] md:h-[60px] md:w-[60px] flex-shrink-0"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={disabled || !!attachedFile}
+                title="Attach file"
+              >
+                <Paperclip className="h-4 w-4 md:h-5 md:w-5" />
+              </Button>
+            </>
+          )}
+          
+          <Textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            className="min-h-[50px] md:min-h-[60px] max-h-[150px] md:max-h-[200px] resize-none text-sm md:text-base"
+            disabled={disabled}
+            data-testid="input-message"
+          />
+          <Button 
+            type="submit" 
+            size="icon" 
+            disabled={disabled || (!input.trim() && !attachedFile)}
+            className="h-[50px] w-[50px] md:h-[60px] md:w-[60px] flex-shrink-0"
+            data-testid="button-send"
+          >
+            <Send className="h-4 w-4 md:h-5 md:w-5" />
+          </Button>
+        </div>
       </div>
     </form>
   );
