@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, MessageSquare, LogOut, MoreVertical, Trash2, Edit2, Settings } from "lucide-react";
+import { Plus, MessageSquare, LogOut, MoreVertical, Trash2, Edit2, Settings, ImageIcon, Sparkles } from "lucide-react";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
@@ -50,6 +50,8 @@ interface ChatSidebarProps {
   onRenameConversation: (id: string, newTitle: string) => void;
   isOpen: boolean;
   onToggle: () => void;
+  selectedModel?: string;
+  onSelectModel?: (model: string) => void;
 }
 
 export const ChatSidebar = ({
@@ -61,6 +63,8 @@ export const ChatSidebar = ({
   onRenameConversation,
   isOpen,
   onToggle,
+  selectedModel = "chat",
+  onSelectModel = () => {},
 }: ChatSidebarProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -130,7 +134,47 @@ export const ChatSidebar = ({
       <Separator />
 
       <ScrollArea className="flex-1 px-3">
-        <div className="space-y-2 py-4">
+        {/* GPTs Section */}
+        <div className="py-4">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-3">
+            AI Models
+          </h2>
+          <div className="space-y-1">
+            <button
+              onClick={() => {
+                onSelectModel("chat");
+                if (window.innerWidth < 768) onToggle();
+              }}
+              className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
+                selectedModel === "chat" ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
+              }`}
+            >
+              <Sparkles className="h-4 w-4 text-blue-500" />
+              <span className="text-sm font-medium">Chat Assistant</span>
+            </button>
+            <button
+              onClick={() => {
+                onSelectModel("image-generator");
+                if (window.innerWidth < 768) onToggle();
+              }}
+              className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
+                selectedModel === "image-generator" ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
+              }`}
+            >
+              <ImageIcon className="h-4 w-4 text-purple-500" />
+              <span className="text-sm font-medium">Image Generator</span>
+            </button>
+          </div>
+        </div>
+
+        <Separator className="my-2" />
+
+        {/* Chats Section */}
+        <div className="py-4">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-3">
+            Chats
+          </h2>
+          <div className="space-y-2">
           {conversations.map((conv) => (
             <div
               key={conv.id}
@@ -189,6 +233,7 @@ export const ChatSidebar = ({
               </div>
             </div>
           ))}
+          </div>
         </div>
       </ScrollArea>
 

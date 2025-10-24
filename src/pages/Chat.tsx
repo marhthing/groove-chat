@@ -31,6 +31,7 @@ const Chat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<string>("chat");
   const scrollRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -177,10 +178,54 @@ const Chat = () => {
     }
   };
 
+  const handleImageGeneration = async (prompt: string) => {
+    try {
+      // Add user message to UI
+      const userMessage: Message = {
+        id: crypto.randomUUID(),
+        role: "user",
+        content: prompt,
+        created_at: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, userMessage]);
+
+      // Generate image using Pollinations.ai
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true`;
+
+      // Add assistant message with image
+      const assistantMessage: Message = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: `![Generated Image](${imageUrl})`,
+        created_at: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
+
+      toast({
+        title: "Success",
+        description: "Image generated successfully!",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to generate image",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const sendMessage = async (content: string) => {
     if (!session) return;
 
     setIsLoading(true);
+
+    // Handle image generation
+    if (selectedModel === "image-generator") {
+      await handleImageGeneration(content);
+      return;
+    }
 
     // Create conversation if needed
     let conversationId = currentConversationId;
@@ -365,6 +410,12 @@ const Chat = () => {
       onRenameConversation={renameConversation}
       isOpen={isSidebarOpen}
       onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+      selectedModel={selectedModel}
+      onSelectModel={(model) => {
+        setSelectedModel(model);
+        setMessages([]);
+        setCurrentConversationId(null);
+      }}
     />
   );
 
@@ -392,9 +443,13 @@ const Chat = () => {
             {messages.length === 0 ? (
               <div className="flex items-center justify-center h-full px-4">
                 <div className="text-center space-y-3 md:space-y-4 p-4 md:p-8 max-w-md">
-                  <h2 className="text-xl md:text-2xl font-semibold">{BRAND_NAME}</h2>
+                  <h2 className="text-xl md:text-2xl font-semibold">
+                    {selectedModel === "image-generator" ? "Image Generator" : BRAND_NAME}
+                  </h2>
                   <p className="text-sm md:text-base text-muted-foreground">
-                    How can I help you today?
+                    {selectedModel === "image-generator"
+                      ? "Describe the image you'd like to generate"
+                      : "How can I help you today?"}
                   </p>
                 </div>
               </div>
@@ -412,7 +467,11 @@ const Chat = () => {
           </ScrollArea>
         </div>
 
-        <ChatInput onSend={sendMessage} disabled={isLoading} />
+        <ChatInput 
+          onSend={sendMessage} 
+          disabled={isLoading}
+          placeholder={selectedModel === "image-generator" ? "Describe the image you want to generate..." : "Type your message..."}
+        />
       </div>
     </div>
   );
