@@ -5,6 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { marked } from "marked";
+import markedKatex from "marked-katex-extension";
+import "katex/dist/katex.min.css";
+
+// Configure marked with KaTeX extension
+marked.use(markedKatex({
+  throwOnError: false,
+  output: 'html'
+}));
 
 interface ChatMessageProps {
   role: "user" | "assistant";
@@ -77,7 +85,7 @@ export const ChatMessage = ({ role, content, fileName, fileType }: ChatMessagePr
       const htmlContent = marked.parse(text, { async: false }) as string;
       return (
         <div 
-          className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none prose-p:mb-4 prose-headings:mb-3 prose-headings:mt-6 prose-ul:my-4 prose-ol:my-4 prose-li:my-1"
+          className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none prose-p:mb-4 prose-headings:mb-3 prose-headings:mt-6 prose-ul:my-4 prose-ol:my-4 prose-li:my-1 [&_.katex]:text-inherit [&_.katex-display]:my-4"
           dangerouslySetInnerHTML={{ __html: htmlContent }}
         />
       );
