@@ -567,7 +567,7 @@ const Chat = () => {
           }
         };
       } else if (selectedModel === "problem-solver") {
-        modelToUse = "deepseek-r1-distill-llama-70b";
+        modelToUse = "llama-3.3-70b-specdec";
       } else if (selectedModel === "website-analyzer") {
         modelToUse = "groq/compound";
         compoundCustom = {
