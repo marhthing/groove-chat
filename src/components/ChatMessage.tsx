@@ -1,8 +1,8 @@
+import React, { useState, useEffect } from "react";
 import { User, FileText, Image as ImageIcon, FileSpreadsheet } from "lucide-react";
 import { BRAND_NAME } from "@/lib/constants";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { marked } from "marked";
 import markedKatex from "marked-katex-extension";
@@ -68,17 +68,6 @@ export const ChatMessage = ({ role, content, fileName, fileType }: ChatMessagePr
       loadProfile();
     }
   }, [isUser]);
-
-  // Configure marked with KaTeX extension (only once)
-  React.useEffect(() => {
-    import('marked-katex-extension').then((module) => {
-      const markedKatex = module.default || module;
-      marked.use(markedKatex({
-        throwOnError: false,
-        output: 'html'
-      }));
-    }).catch(err => console.error('Failed to load KaTeX extension:', err));
-  }, []);
 
   const renderContent = (text: string) => {
     const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/;
