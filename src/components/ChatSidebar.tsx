@@ -201,6 +201,30 @@ export const ChatSidebar = ({
               <Globe className="h-4 w-4 text-cyan-500 flex-shrink-0" />
               <span className="text-sm font-medium">Website Analyzer</span>
             </button>
+            <button
+              onClick={() => {
+                onSelectModel("deep-research");
+                if (window.innerWidth < 768) onToggle();
+              }}
+              className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
+                selectedModel === "deep-research" ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
+              }`}
+            >
+              <Search className="h-4 w-4 text-indigo-500 flex-shrink-0" />
+              <span className="text-sm font-medium">Deep Research</span>
+            </button>
+            <button
+              onClick={() => {
+                onSelectModel("math-solver");
+                if (window.innerWidth < 768) onToggle();
+              }}
+              className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
+                selectedModel === "math-solver" ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
+              }`}
+            >
+              <Brain className="h-4 w-4 text-pink-500 flex-shrink-0" />
+              <span className="text-sm font-medium">Math Solver</span>
+            </button>
           </div>
         </div>
 

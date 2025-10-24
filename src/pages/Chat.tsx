@@ -567,6 +567,15 @@ const Chat = () => {
       } else if (selectedModel === "website-analyzer") {
         modelToUse = "llama-3.3-70b-versatile";
         tools = [{ type: "visit_website" }];
+      } else if (selectedModel === "deep-research") {
+        modelToUse = "llama-3.3-70b-versatile";
+        tools = [
+          { type: "browser_automation" },
+          { type: "web_search" }
+        ];
+      } else if (selectedModel === "math-solver") {
+        modelToUse = "llama-3.3-70b-versatile";
+        tools = [{ type: "wolfram_alpha" }];
       }
 
       // Prepare messages for API
@@ -671,6 +680,39 @@ RESPONSE FORMAT:
 - Add "Sources:" section with links when applicable
 
 Remember: Your strength is finding and synthesizing current, accurate information from the web.`;
+        } else if (selectedModel === "deep-research") {
+          systemPrompt = `You are a Deep Research Analyst with advanced browser automation and parallel web browsing capabilities. You conduct comprehensive, multi-source investigations.
+
+CAPABILITIES:
+- Launch up to 10 parallel browsers for simultaneous research
+- Deep dive into multiple websites and sources
+- Cross-reference information across diverse platforms
+- Synthesize complex information from varied sources
+- Automated browsing for thorough exploration
+
+RESEARCH METHODOLOGY:
+1. **Parallel Investigation**: Launch multiple research threads simultaneously
+2. **Deep Analysis**: Go beyond surface-level information
+3. **Source Diversity**: Gather from academic, news, forums, and expert sources
+4. **Cross-Validation**: Verify information across multiple sources
+5. **Comprehensive Synthesis**: Combine findings into coherent insights
+
+RESPONSE FORMAT:
+- **Executive Summary**: Key findings upfront
+- **Deep Dive**: Detailed analysis from multiple perspectives
+- **Source Analysis**: Evaluate source credibility and relevance
+- **Conflicting Information**: Highlight disagreements between sources
+- **Recommendations**: Based on comprehensive evidence
+- **Sources**: Organized list with annotations
+
+USE CASES:
+- Competitive analysis requiring multiple company websites
+- Academic research needing diverse scholarly sources
+- Market research across various platforms
+- Comparative product/service analysis
+- Complex topic investigation requiring depth
+
+Remember: Your power is in comprehensive, parallel research - not just quick searches.`;
         } else if (selectedModel === "problem-solver") {
           systemPrompt = `You are a Problem Solver using advanced reasoning capabilities. You think through problems step-by-step with explicit logic.
 
@@ -722,6 +764,48 @@ RESPONSE FORMAT:
 - **Audience/Purpose**: Who it's for and why
 
 Remember: Focus on extracting value and meaning, not just repeating content.`;
+        } else if (selectedModel === "math-solver") {
+          systemPrompt = `You are a Math Solver with access to Wolfram Alpha's computational intelligence. You solve mathematical, scientific, and computational problems with precision.
+
+CAPABILITIES:
+- Access to Wolfram Alpha for exact computations
+- Solve complex mathematical equations and formulas
+- Perform scientific calculations and unit conversions
+- Generate plots and visualizations
+- Access to curated knowledge in math, science, engineering
+
+PROBLEM-SOLVING APPROACH:
+1. **Understand**: Clarify the mathematical problem
+2. **Method**: Choose the appropriate mathematical approach
+3. **Compute**: Use Wolfram Alpha for precise calculations
+4. **Explain**: Show step-by-step reasoning
+5. **Verify**: Check results for accuracy
+6. **Visualize**: Include plots or diagrams when helpful
+
+AREAS OF EXPERTISE:
+- Algebra, Calculus, Linear Algebra
+- Differential Equations
+- Statistics and Probability
+- Physics and Chemistry calculations
+- Engineering computations
+- Unit conversions and dimensional analysis
+- Mathematical proofs and theorems
+
+RESPONSE FORMAT:
+- **Problem**: Restate the question clearly
+- **Approach**: Explain the mathematical method
+- **Solution**: Step-by-step calculation with Wolfram Alpha
+- **Result**: Clear, precise answer with units
+- **Verification**: Check if answer makes sense
+- **Visualization**: Include graphs/plots if relevant
+
+EXAMPLES:
+- "Solve the differential equation dy/dx = x²y"
+- "Calculate the trajectory of a projectile launched at 45° with initial velocity 20m/s"
+- "Find the eigenvalues of matrix [[2,1],[1,2]]"
+- "Convert 100 km/h to m/s"
+
+Remember: Precision and clarity are paramount. Show your work and explain mathematical concepts clearly.`;
         }
 
         apiMessages = [
@@ -882,6 +966,8 @@ Remember: Focus on extracting value and meaning, not just repeating content.`;
                selectedModel === "research-assistant" ? "Research Assistant" :
                selectedModel === "problem-solver" ? "Problem Solver" :
                selectedModel === "website-analyzer" ? "Website Analyzer" :
+               selectedModel === "deep-research" ? "Deep Research" :
+               selectedModel === "math-solver" ? "Math Solver" :
                BRAND_NAME}
             </h2>
           </div>
@@ -905,6 +991,8 @@ Remember: Focus on extracting value and meaning, not just repeating content.`;
                selectedModel === "research-assistant" ? "Research Assistant" :
                selectedModel === "problem-solver" ? "Problem Solver" :
                selectedModel === "website-analyzer" ? "Website Analyzer" :
+               selectedModel === "deep-research" ? "Deep Research" :
+               selectedModel === "math-solver" ? "Math Solver" :
                BRAND_NAME}
             </h2>
           </div>
@@ -931,6 +1019,8 @@ Remember: Focus on extracting value and meaning, not just repeating content.`;
                      selectedModel === "research-assistant" ? "Research Assistant" :
                      selectedModel === "problem-solver" ? "Problem Solver" :
                      selectedModel === "website-analyzer" ? "Website Analyzer" :
+                     selectedModel === "deep-research" ? "Deep Research" :
+                     selectedModel === "math-solver" ? "Math Solver" :
                      BRAND_NAME}
                   </h2>
                   <p className="text-sm md:text-base text-muted-foreground">
@@ -942,6 +1032,10 @@ Remember: Focus on extracting value and meaning, not just repeating content.`;
                       ? "Present your problem - I'll think through it step-by-step"
                       : selectedModel === "website-analyzer"
                       ? "Share a URL - I'll analyze and summarize the content"
+                      : selectedModel === "deep-research"
+                      ? "Ask complex questions requiring comprehensive multi-source research"
+                      : selectedModel === "math-solver"
+                      ? "Ask mathematical, scientific, or computational questions"
                       : "How can I help you today?"}
                   </p>
                 </div>
@@ -970,6 +1064,8 @@ Remember: Focus on extracting value and meaning, not just repeating content.`;
             selectedModel === "research-assistant" ? "Ask a question that needs current information..." :
             selectedModel === "problem-solver" ? "Describe your problem or challenge..." :
             selectedModel === "website-analyzer" ? "Paste a URL to analyze..." :
+            selectedModel === "deep-research" ? "Ask a complex research question..." :
+            selectedModel === "math-solver" ? "Enter your math or science problem..." :
             "Type your message..."
           }
           allowFileUpload={selectedModel === "chat"}
