@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Plus, MessageSquare, LogOut, MoreVertical, Trash2, Edit2, Settings, ImageIcon, Sparkles } from "lucide-react";
 import { Button } from "./ui/button";
@@ -149,7 +150,7 @@ export const ChatSidebar = ({
                 selectedModel === "chat" ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
               }`}
             >
-              <Sparkles className="h-4 w-4 text-blue-500" />
+              <Sparkles className="h-4 w-4 text-blue-500 flex-shrink-0" />
               <span className="text-sm font-medium">Chat Assistant</span>
             </button>
             <button
@@ -161,7 +162,7 @@ export const ChatSidebar = ({
                 selectedModel === "image-generator" ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
               }`}
             >
-              <ImageIcon className="h-4 w-4 text-purple-500" />
+              <ImageIcon className="h-4 w-4 text-purple-500 flex-shrink-0" />
               <span className="text-sm font-medium">Image Generator</span>
             </button>
           </div>
@@ -174,65 +175,65 @@ export const ChatSidebar = ({
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-3">
             Chats
           </h2>
-          <div className="space-y-2">
-          {conversations.map((conv) => (
-            <div
-              key={conv.id}
-              className={`group relative rounded-lg transition-colors ${
-                currentConversationId === conv.id ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
-              }`}
-            >
-              <button
-                onClick={() => {
-                  onSelectConversation(conv.id);
-                  if (window.innerWidth < 768) onToggle();
-                }}
-                className="w-full text-left p-3 pr-10 rounded-lg flex items-start gap-3"
-                data-testid={`button-conversation-${conv.id}`}
+          <div className="space-y-1">
+            {conversations.map((conv) => (
+              <div
+                key={conv.id}
+                className={`group relative rounded-lg transition-colors ${
+                  currentConversationId === conv.id ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
+                }`}
               >
-                <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
-                <div className="flex-1 min-w-0 overflow-hidden">
-                  <p className="text-sm font-medium truncate">{conv.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {new Date(conv.updated_at).toLocaleDateString()}
-                  </p>
-                </div>
-              </button>
+                <div className="flex items-center gap-2 pr-2">
+                  <button
+                    onClick={() => {
+                      onSelectConversation(conv.id);
+                      if (window.innerWidth < 768) onToggle();
+                    }}
+                    className="flex-1 text-left p-3 rounded-lg flex items-start gap-3 min-w-0"
+                    data-testid={`button-conversation-${conv.id}`}
+                  >
+                    <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{conv.title}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {new Date(conv.updated_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </button>
 
-              <div className="absolute right-1 top-1/2 -translate-y-1/2 z-10">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity bg-sidebar hover:bg-sidebar-accent"
-                      onClick={(e) => e.stopPropagation()}
-                      data-testid={`button-options-${conv.id}`}
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={(e) => handleRenameClick(conv, e)}
-                      data-testid={`button-rename-${conv.id}`}
-                    >
-                      <Edit2 className="h-4 w-4 mr-2" />
-                      Rename
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={(e) => handleDeleteClick(conv, e)}
-                      className="text-destructive focus:text-destructive"
-                      data-testid={`button-delete-${conv.id}`}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 flex-shrink-0"
+                        onClick={(e) => e.stopPropagation()}
+                        data-testid={`button-options-${conv.id}`}
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={(e) => handleRenameClick(conv, e)}
+                        data-testid={`button-rename-${conv.id}`}
+                      >
+                        <Edit2 className="h-4 w-4 mr-2" />
+                        Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => handleDeleteClick(conv, e)}
+                        className="text-destructive focus:text-destructive"
+                        data-testid={`button-delete-${conv.id}`}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
           </div>
         </div>
       </ScrollArea>
