@@ -69,6 +69,17 @@ export const ChatMessage = ({ role, content, fileName, fileType }: ChatMessagePr
     }
   }, [isUser]);
 
+  // Configure marked with KaTeX extension (only once)
+  React.useEffect(() => {
+    import('marked-katex-extension').then((module) => {
+      const markedKatex = module.default || module;
+      marked.use(markedKatex({
+        throwOnError: false,
+        output: 'html'
+      }));
+    }).catch(err => console.error('Failed to load KaTeX extension:', err));
+  }, []);
+
   const renderContent = (text: string) => {
     const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/;
     const match = text.match(imageRegex);
