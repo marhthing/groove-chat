@@ -83,7 +83,7 @@ const Auth = () => {
           <CardDescription>
             {isLogin
               ? "Sign in to your account to continue"
-              : "Sign up to start using Groove Chat"}
+              : "Sign up to start using Groove AI"}
           </CardDescription>
         </CardHeader>
         <CardContent>

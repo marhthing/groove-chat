@@ -308,6 +308,13 @@ const Chat = () => {
       />
 
       <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <div className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 py-3 md:py-4">
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <h1 className="text-lg md:text-xl font-semibold">Groove AI</h1>
+          </div>
+        </div>
+
         <div className="flex-1 overflow-hidden">
           <ScrollArea className="h-full" ref={scrollRef}>
             {messages.length === 0 ? (
@@ -315,7 +322,7 @@ const Chat = () => {
                 <div className="text-center space-y-3 md:space-y-4 p-4 md:p-8 max-w-md">
                   <h2 className="text-xl md:text-2xl font-semibold">Start a conversation</h2>
                   <p className="text-sm md:text-base text-muted-foreground">
-                    Send a message to begin chatting with the AI assistant
+                    Send a message to begin chatting with Groove AI
                   </p>
                 </div>
               </div>
