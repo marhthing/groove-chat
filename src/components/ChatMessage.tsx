@@ -1,5 +1,8 @@
 import { User, Bot } from "lucide-react";
 import { BRAND_NAME } from "@/lib/constants";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
@@ -8,6 +11,30 @@ interface ChatMessageProps {
 
 export const ChatMessage = ({ role, content }: ChatMessageProps) => {
   const isUser = role === "user";
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
+  const [userInitials, setUserInitials] = useState("U");
+
+  useEffect(() => {
+    if (isUser) {
+      const loadProfile = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("profile_picture, first_name, last_name")
+            .eq("id", session.user.id)
+            .single();
+
+          if (profile) {
+            setProfilePicture(profile.profile_picture);
+            const initials = `${profile.first_name?.charAt(0) || ""}${profile.last_name?.charAt(0) || ""}`.toUpperCase();
+            setUserInitials(initials || "U");
+          }
+        }
+      };
+      loadProfile();
+    }
+  }, [isUser]);
 
   return (
     <div className={`w-full py-6 px-4 ${isUser ? "bg-background" : "bg-muted/30"}`} data-testid={`message-${role}`}>
@@ -23,9 +50,10 @@ export const ChatMessage = ({ role, content }: ChatMessageProps) => {
                 </div>
               </div>
             </div>
-            <div className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-sm">
-              <User className="h-4 w-4 md:h-5 md:w-5" />
-            </div>
+            <Avatar className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10">
+              <AvatarImage src={profilePicture || undefined} />
+              <AvatarFallback className="bg-primary text-primary-foreground">{userInitials}</AvatarFallback>
+            </Avatar>
           </div>
         ) : (
           // AI message - left aligned
