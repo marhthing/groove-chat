@@ -338,8 +338,17 @@ const Chat = () => {
 
     setIsLoading(true);
 
+    // Determine the model to use - check current conversation's model type first
+    let modelToUse = selectedModel;
+    if (currentConversationId) {
+      const conversation = conversations.find(c => c.id === currentConversationId);
+      if (conversation?.model_type) {
+        modelToUse = conversation.model_type;
+      }
+    }
+
     // Handle image generation
-    if (selectedModel === "image-generator") {
+    if (modelToUse === "image-generator") {
       await handleImageGeneration(content);
       return;
     }
