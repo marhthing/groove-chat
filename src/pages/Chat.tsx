@@ -19,6 +19,8 @@ interface Message {
   content: string;
   created_at: string;
   image_url?: string;
+  file_name?: string;
+  file_type?: string;
 }
 
 interface Conversation {
@@ -175,6 +177,8 @@ const Chat = () => {
         ...msg,
         role: msg.role as "user" | "assistant",
         content: msg.image_url ? `![Generated Image](${msg.image_url})` : msg.content,
+        file_name: msg.file_name,
+        file_type: msg.file_type,
       })));
 
       // Load the model type for the selected conversation
@@ -466,6 +470,8 @@ const Chat = () => {
       role: "user",
       content,
       created_at: new Date().toISOString(),
+      file_name: processedDocument?.filename,
+      file_type: processedDocument?.type,
     };
     setMessages((prev) => [...prev, userMessage]);
 
@@ -474,6 +480,8 @@ const Chat = () => {
       conversation_id: conversationId,
       role: "user",
       content,
+      file_name: processedDocument?.filename,
+      file_type: processedDocument?.type,
     });
 
     if (userError) {
@@ -496,9 +504,10 @@ const Chat = () => {
     // Call AI chat function
     try {
       // Prepare all messages including the new user message
-      const allMessages = [...messages, userMessage].map((m) => ({
+      // For the latest message, use actualContent which includes document text
+      const allMessages = [...messages, userMessage].map((m, index) => ({
         role: m.role,
-        content: m.content,
+        content: (index === messages.length && processedDocument) ? actualContent : m.content,
       }));
 
       // Optimize context if conversation is getting too long (keep last 20 messages)
@@ -713,6 +722,8 @@ const Chat = () => {
                     key={message.id}
                     role={message.role}
                     content={message.content}
+                    fileName={message.file_name}
+                    fileType={message.file_type}
                   />
                 ))}
               </div>

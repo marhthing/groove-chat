@@ -1,18 +1,36 @@
-import { User } from "lucide-react";
+import { User, FileText, Image as ImageIcon, FileSpreadsheet } from "lucide-react";
 import { BRAND_NAME } from "@/lib/constants";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
   content: string;
+  fileName?: string;
+  fileType?: string;
 }
 
-export const ChatMessage = ({ role, content }: ChatMessageProps) => {
+export const ChatMessage = ({ role, content, fileName, fileType }: ChatMessageProps) => {
   const isUser = role === "user";
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [userInitials, setUserInitials] = useState("U");
+
+  const getFileIcon = () => {
+    switch (fileType) {
+      case 'image':
+        return <ImageIcon className="h-3 w-3" />;
+      case 'pdf':
+        return <FileText className="h-3 w-3" />;
+      case 'excel':
+        return <FileSpreadsheet className="h-3 w-3" />;
+      case 'docx':
+        return <FileText className="h-3 w-3" />;
+      default:
+        return <FileText className="h-3 w-3" />;
+    }
+  };
 
   useEffect(() => {
     if (isUser) {
@@ -68,6 +86,12 @@ export const ChatMessage = ({ role, content }: ChatMessageProps) => {
             <div className="flex flex-col items-end space-y-1">
               <p className="text-xs font-medium text-muted-foreground">You</p>
               <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-3 py-2 shadow-sm max-w-[80%] md:max-w-[500px]">
+                {fileName && (
+                  <Badge variant="secondary" className="mb-2 gap-1">
+                    {getFileIcon()}
+                    <span className="text-xs">{fileName}</span>
+                  </Badge>
+                )}
                 {renderContent(content)}
               </div>
             </div>
