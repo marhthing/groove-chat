@@ -1068,7 +1068,7 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
             selectedModel === "math-solver" ? "Enter your math or science problem..." :
             "Type your message..."
           }
-          allowFileUpload={selectedModel === "chat"}
+          allowFileUpload={selectedModel !== "image-generator"}
         />
       </div>
     </div>
