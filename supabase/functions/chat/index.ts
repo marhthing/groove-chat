@@ -14,8 +14,8 @@ serve(async (req) => {
     const { messages } = await req.json();
     console.log("Chat request received with messages:", messages.length);
 
-    const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
-    if (!GROQ_API_KEY) {
+    const AI_API_KEY = Deno.env.get("GROQ_API_KEY");
+    if (!AI_API_KEY) {
       console.error("AI service is not configured");
       throw new Error("AI service is currently unavailable. Please try again later.");
     }
@@ -23,7 +23,7 @@ serve(async (req) => {
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${GROQ_API_KEY}`,
+        Authorization: `Bearer ${AI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
