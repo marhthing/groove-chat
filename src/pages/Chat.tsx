@@ -5,6 +5,8 @@ import { ChatSidebar } from "@/components/ChatSidebar";
 import { ChatMessage } from "@/components/ChatMessage";
 import { ChatInput } from "@/components/ChatInput";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Menu } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Session } from "@supabase/supabase-js";
 import { BRAND_NAME } from "@/lib/constants";
@@ -344,14 +346,24 @@ const Chat = () => {
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden flex-col">
-      {/* Header - Full Width */}
+    <div className="flex flex-col h-screen bg-background overflow-hidden">
+      {/* Header - Full Width at Top */}
       <div className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 py-3 md:py-4 z-10">
-        <div className="flex items-center justify-start md:ml-64">
-          <h1 className="text-lg md:text-xl font-semibold ml-12 md:ml-0">{BRAND_NAME}</h1>
+        <div className="flex items-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden mr-2"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            data-testid="button-menu"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          <h1 className="text-lg md:text-xl font-semibold">{BRAND_NAME}</h1>
         </div>
       </div>
 
+      {/* Sidebar and Chat Area Below Header */}
       <div className="flex flex-1 overflow-hidden">
         <ChatSidebar
           conversations={conversations}
@@ -365,31 +377,30 @@ const Chat = () => {
         />
 
         <div className="flex-1 flex flex-col min-w-0">
-
-        <div className="flex-1 overflow-hidden">
-          <ScrollArea className="h-full" ref={scrollRef}>
-            {messages.length === 0 ? (
-              <div className="flex items-center justify-center h-full px-4">
-                <div className="text-center space-y-3 md:space-y-4 p-4 md:p-8 max-w-md">
-                  <h2 className="text-xl md:text-2xl font-semibold">Start a conversation</h2>
-                  <p className="text-sm md:text-base text-muted-foreground">
-                    Send a message to begin chatting with {BRAND_NAME}
-                  </p>
+          <div className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full" ref={scrollRef}>
+              {messages.length === 0 ? (
+                <div className="flex items-center justify-center h-full px-4">
+                  <div className="text-center space-y-3 md:space-y-4 p-4 md:p-8 max-w-md">
+                    <h2 className="text-xl md:text-2xl font-semibold">Start a conversation</h2>
+                    <p className="text-sm md:text-base text-muted-foreground">
+                      Send a message to begin chatting with {BRAND_NAME}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="w-full">
-                {messages.map((message) => (
-                  <ChatMessage
-                    key={message.id}
-                    role={message.role}
-                    content={message.content}
-                  />
-                ))}
-              </div>
-            )}
-          </ScrollArea>
-        </div>
+              ) : (
+                <div className="w-full">
+                  {messages.map((message) => (
+                    <ChatMessage
+                      key={message.id}
+                      role={message.role}
+                      content={message.content}
+                    />
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </div>
 
           <ChatInput onSend={sendMessage} disabled={isLoading} />
         </div>

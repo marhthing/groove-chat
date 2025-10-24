@@ -208,16 +208,6 @@ export const ChatSidebar = ({
     <>
       {/* Mobile Sheet */}
       <Sheet open={isOpen} onOpenChange={onToggle}>
-        <SheetTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden fixed top-3 left-4 z-50 -ml-2"
-            data-testid="button-menu"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-        </SheetTrigger>
         <SheetContent side="left" className="p-0">
           {sidebarContent}
         </SheetContent>
