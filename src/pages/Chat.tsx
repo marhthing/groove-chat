@@ -324,7 +324,7 @@ const Chat = () => {
       // Use Groq AI to synthesize a clear, coherent prompt for image generation
       const apiKey = import.meta.env.VITE_GROQ_API_KEY;
       if (!apiKey) {
-        throw new Error("GROQ API key is not configured.");
+        throw new Error("Service temporary unavailable.");
       }
 
       const synthResponse = await fetch(
@@ -486,7 +486,7 @@ const Chat = () => {
 
       const apiKey = import.meta.env.VITE_GROQ_API_KEY;
       if (!apiKey) {
-        throw new Error("GROQ API key is not configured. Please add VITE_GROQ_API_KEY to your secrets.");
+        throw new Error("Service temporary unavailable.");
       }
 
       const response = await fetch(
