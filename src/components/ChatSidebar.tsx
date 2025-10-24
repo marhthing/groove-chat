@@ -191,8 +191,8 @@ export const ChatSidebar = ({
                 data-testid={`button-conversation-${conv.id}`}
               >
                 <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
-                <div className="flex-1 min-w-0 pr-8">
-                  <p className="text-sm font-medium truncate">{conv.title}</p>
+                <div className="flex-1 min-w-0 pr-8 overflow-hidden">
+                  <p className="text-sm font-medium truncate overflow-hidden text-ellipsis whitespace-nowrap">{conv.title}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {new Date(conv.updated_at).toLocaleDateString()}
                   </p>
