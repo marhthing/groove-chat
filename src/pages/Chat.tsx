@@ -260,8 +260,19 @@ const Chat = () => {
         content: prompt,
       });
 
-      // Generate image using Pollinations.ai
-      const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true`;
+      // Build context-aware prompt by combining previous user prompts
+      const previousUserPrompts = messages
+        .filter(m => m.role === "user")
+        .map(m => m.content)
+        .join(", ");
+      
+      // Combine previous context with new prompt
+      const fullPrompt = previousUserPrompts 
+        ? `${previousUserPrompts}, ${prompt}`
+        : prompt;
+
+      // Generate image using Pollinations.ai with full context
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=1024&height=1024&nologo=true`;
 
       // Add assistant message with image to UI
       const assistantMessage: Message = {
