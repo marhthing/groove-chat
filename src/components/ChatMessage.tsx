@@ -37,8 +37,8 @@ export const ChatMessage = ({ role, content }: ChatMessageProps) => {
   }, [isUser]);
 
   return (
-    <div className={`w-full py-4 ${isUser ? "bg-background" : "bg-muted/30"}`} data-testid={`message-${role}`}>
-      <div className="max-w-4xl mx-auto px-4">
+    <div className={`w-full py-2 ${isUser ? "bg-background" : "bg-muted/30"}`} data-testid={`message-${role}`}>
+      <div className="max-w-4xl mx-auto px-3">
         {isUser ? (
           // User message - right aligned
           <div className="flex gap-2 md:gap-3 justify-end">
