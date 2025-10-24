@@ -16,8 +16,8 @@ serve(async (req) => {
 
     const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
     if (!GROQ_API_KEY) {
-      console.error("GROQ_API_KEY is not configured");
-      throw new Error("GROQ_API_KEY is not configured");
+      console.error("AI service is not configured");
+      throw new Error("AI service is currently unavailable. Please try again later.");
     }
 
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -55,7 +55,7 @@ serve(async (req) => {
       
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "Payment required. Please check your Groq API key." }),
+          JSON.stringify({ error: "AI service is temporarily unavailable. Please try again later." }),
           {
             status: 402,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
