@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { Plus, MessageSquare, LogOut, MoreVertical, Trash2, Edit2 } from "lucide-react";
+import { Plus, MessageSquare, LogOut, MoreVertical, Trash2, Edit2, Settings } from "lucide-react";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
@@ -195,14 +194,22 @@ export const ChatSidebar = ({
 
       <Separator />
 
-      <div className="p-4">
-        <Button
-          onClick={handleLogout}
-          variant="ghost"
-          className="w-full justify-start gap-2"
-          data-testid="button-logout"
+      {/* Footer with Settings and Sign Out */}
+      <div className="p-4 border-t space-y-2">
+        <Button 
+          variant="ghost" 
+          className="w-full justify-start"
+          onClick={() => navigate("/settings")}
         >
-          <LogOut className="h-4 w-4" />
+          <Settings className="mr-2 h-4 w-4" />
+          Settings
+        </Button>
+        <Button 
+          variant="ghost" 
+          className="w-full justify-start"
+          onClick={handleLogout}
+        >
+          <LogOut className="mr-2 h-4 w-4" />
           Sign Out
         </Button>
       </div>

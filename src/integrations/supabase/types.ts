@@ -79,6 +79,7 @@ export type Database = {
           id: string
           last_name: string | null
           onboarding_completed: boolean
+          profile_picture: string | null
           updated_at: string
         }
         Insert: {
@@ -89,6 +90,7 @@ export type Database = {
           id: string
           last_name?: string | null
           onboarding_completed?: boolean
+          profile_picture?: string | null
           updated_at?: string
         }
         Update: {
@@ -99,6 +101,7 @@ export type Database = {
           id?: string
           last_name?: string | null
           onboarding_completed?: boolean
+          profile_picture?: string | null
           updated_at?: string
         }
         Relationships: []
