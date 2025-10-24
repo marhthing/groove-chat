@@ -12,7 +12,6 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -22,7 +21,24 @@ const Auth = () => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate("/chat");
+        // Check if email is verified
+        if (!session.user.email_confirmed_at) {
+          await supabase.auth.signOut();
+          return;
+        }
+
+        // Check if onboarding is completed
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("onboarding_completed")
+          .eq("id", session.user.id)
+          .single();
+
+        if (!profile?.onboarding_completed) {
+          navigate("/onboarding");
+        } else {
+          navigate("/chat");
+        }
       }
     };
     checkUser();
@@ -34,27 +50,47 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
         if (error) throw error;
 
-        toast({
-          title: "Welcome back!",
-          description: "You've successfully signed in.",
-        });
-        navigate("/chat");
+        // Check if email is verified
+        if (data.user && !data.user.email_confirmed_at) {
+          await supabase.auth.signOut();
+          toast({
+            title: "Verify your account",
+            description: "Please verify your email before logging in.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Check if onboarding is completed
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("onboarding_completed")
+          .eq("id", data.user?.id)
+          .single();
+
+        if (!profile?.onboarding_completed) {
+          navigate("/onboarding");
+        } else {
+          toast({
+            title: "Welcome back!",
+            description: "You've successfully signed in.",
+          });
+          navigate("/chat");
+        }
       } else {
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/chat`,
-            data: {
-              full_name: fullName,
-            },
+            emailRedirectTo: `${window.location.origin}/onboarding`,
           },
         });
 
@@ -64,6 +100,7 @@ const Auth = () => {
           title: "Account created!",
           description: "Please check your email to verify your account.",
         });
+        navigate("/onboarding");
       }
     } catch (error: any) {
       toast({
@@ -89,19 +126,6 @@ const Auth = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleAuth} className="space-y-4">
-            {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required={!isLogin}
-                  placeholder="John Doe"
-                />
-              </div>
-            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
