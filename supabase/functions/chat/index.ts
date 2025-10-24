@@ -17,7 +17,7 @@ serve(async (req) => {
     const AI_API_KEY = Deno.env.get("GROQ_API_KEY");
     if (!AI_API_KEY) {
       console.error("AI service is not configured");
-      throw new Error("AI service is currently unavailable. Please try again later.");
+      throw new Error("The service is currently unavailable. Please try again later.");
     }
 
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -45,7 +45,7 @@ serve(async (req) => {
       
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
+          JSON.stringify({ error: "Too many requests. Please wait a moment and try again." }),
           {
             status: 429,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -55,7 +55,7 @@ serve(async (req) => {
       
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "AI service is temporarily unavailable. Please try again later." }),
+          JSON.stringify({ error: "Service temporarily unavailable. Please try again later." }),
           {
             status: 402,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -64,7 +64,7 @@ serve(async (req) => {
       }
 
       return new Response(
-        JSON.stringify({ error: "AI gateway error" }),
+        JSON.stringify({ error: "Something went wrong. Please try again." }),
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
