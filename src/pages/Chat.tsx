@@ -7,6 +7,7 @@ import { ChatInput } from "@/components/ChatInput";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { Session } from "@supabase/supabase-js";
+import { BRAND_NAME } from "@/lib/constants";
 
 interface Message {
   id: string;
@@ -141,6 +142,52 @@ const Chat = () => {
       .update({ title })
       .eq("id", conversationId);
     await loadConversations();
+  };
+
+  const deleteConversation = async (conversationId: string) => {
+    const { error } = await supabase
+      .from("conversations")
+      .delete()
+      .eq("id", conversationId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete conversation",
+        variant: "destructive",
+      });
+    } else {
+      if (currentConversationId === conversationId) {
+        setCurrentConversationId(null);
+        setMessages([]);
+      }
+      await loadConversations();
+      toast({
+        title: "Success",
+        description: "Conversation deleted",
+      });
+    }
+  };
+
+  const renameConversation = async (conversationId: string, newTitle: string) => {
+    const { error } = await supabase
+      .from("conversations")
+      .update({ title: newTitle })
+      .eq("id", conversationId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to rename conversation",
+        variant: "destructive",
+      });
+    } else {
+      await loadConversations();
+      toast({
+        title: "Success",
+        description: "Conversation renamed",
+      });
+    }
   };
 
   const sendMessage = async (content: string) => {
@@ -297,23 +344,27 @@ const Chat = () => {
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      <ChatSidebar
-        conversations={conversations}
-        currentConversationId={currentConversationId}
-        onNewChat={createNewConversation}
-        onSelectConversation={setCurrentConversationId}
-        isOpen={isSidebarOpen}
-        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
-      />
-
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
-        <div className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 py-3 md:py-4">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <h1 className="text-lg md:text-xl font-semibold">Groove AI</h1>
-          </div>
+    <div className="flex h-screen bg-background overflow-hidden flex-col">
+      {/* Header - Full Width */}
+      <div className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 py-3 md:py-4 z-10">
+        <div className="flex items-center justify-center">
+          <h1 className="text-lg md:text-xl font-semibold">{BRAND_NAME}</h1>
         </div>
+      </div>
+
+      <div className="flex flex-1 overflow-hidden">
+        <ChatSidebar
+          conversations={conversations}
+          currentConversationId={currentConversationId}
+          onNewChat={createNewConversation}
+          onSelectConversation={setCurrentConversationId}
+          onDeleteConversation={deleteConversation}
+          onRenameConversation={renameConversation}
+          isOpen={isSidebarOpen}
+          onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+        />
+
+        <div className="flex-1 flex flex-col min-w-0">
 
         <div className="flex-1 overflow-hidden">
           <ScrollArea className="h-full" ref={scrollRef}>
@@ -322,7 +373,7 @@ const Chat = () => {
                 <div className="text-center space-y-3 md:space-y-4 p-4 md:p-8 max-w-md">
                   <h2 className="text-xl md:text-2xl font-semibold">Start a conversation</h2>
                   <p className="text-sm md:text-base text-muted-foreground">
-                    Send a message to begin chatting with Groove AI
+                    Send a message to begin chatting with {BRAND_NAME}
                   </p>
                 </div>
               </div>
@@ -340,7 +391,8 @@ const Chat = () => {
           </ScrollArea>
         </div>
 
-        <ChatInput onSend={sendMessage} disabled={isLoading} />
+          <ChatInput onSend={sendMessage} disabled={isLoading} />
+        </div>
       </div>
     </div>
   );

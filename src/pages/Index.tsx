@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, Zap, Lock, ArrowRight } from "lucide-react";
+import { BRAND_NAME } from "@/lib/constants";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -16,11 +17,11 @@ const Index = () => {
           </div>
           
           <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
-            Welcome to Groove AI
+            Welcome to {BRAND_NAME}
           </h1>
           
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Experience fast, intelligent conversations with Groove AI. 
+            Experience fast, intelligent conversations with {BRAND_NAME}. 
             Get instant answers and helpful insights.
           </p>
 
@@ -74,7 +75,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="border-t border-border py-8 mt-20">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>© 2025 Groove AI. All rights reserved.</p>
+          <p>© 2025 {BRAND_NAME}. All rights reserved.</p>
         </div>
       </footer>
     </div>

@@ -1,4 +1,5 @@
 import { User, Bot } from "lucide-react";
+import { BRAND_NAME } from "@/lib/constants";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
@@ -33,7 +34,7 @@ export const ChatMessage = ({ role, content }: ChatMessageProps) => {
               <Bot className="h-4 w-4 md:h-5 md:w-5" />
             </div>
             <div className="flex flex-col space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">Groove AI</p>
+              <p className="text-sm font-medium text-muted-foreground">{BRAND_NAME}</p>
               <div className="bg-card border border-border rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm max-w-[85%] md:max-w-[600px]">
                 <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
                   {content}

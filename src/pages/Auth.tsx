@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { BRAND_NAME } from "@/lib/constants";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -83,7 +84,7 @@ const Auth = () => {
           <CardDescription>
             {isLogin
               ? "Sign in to your account to continue"
-              : "Sign up to start using Groove AI"}
+              : `Sign up to start using ${BRAND_NAME}`}
           </CardDescription>
         </CardHeader>
         <CardContent>
