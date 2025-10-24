@@ -1,0 +1,161 @@
+Groq
+
+Personal
+/
+
+Default Project
+Playground
+API Keys
+Dashboard
+Docs
+
+Are Martins
+
+Search
+K
+Docs
+API Reference
+Get Started
+Overview
+Quickstart
+OpenAI Compatibility
+Responses API
+Models
+Rate Limits
+Examples
+Features
+Text Generation
+Speech to Text
+Text to Speech
+Images and Vision
+Reasoning
+Structured Outputs
+Built-In Tools
+Web Search
+Browser Search
+Visit Website
+Browser Automation
+Code Execution
+Wolfram Alpha
+Compound
+Overview
+Systems
+Built-In Tools
+Use Cases
+Advanced Features
+Batch Processing
+Flex Processing
+Content Moderation
+Prefilling
+Tool Use
+Remote MCP
+LoRA Inference
+Prompting Guide
+Prompt Basics
+Prompt Patterns
+Model Migration
+Prompt Caching
+Production Readiness
+Optimizing Latency
+Production Checklist
+Security Onboarding
+Developer Resources
+Groq Libraries
+Groq Badge
+Integrations Catalog
+Console
+Spend Limits
+Projects
+Model Permissions
+Billing FAQs
+Your Data
+Support & Guidelines
+Developer Community
+OpenBench
+Errors
+Changelog
+Policies & Notices
+Browser Search
+Copy page
+
+Some models on Groq have built-in support for interactive browser search, providing a more comprehensive approach to accessing real-time web content than traditional web search. Unlike Web Search which performs a single search and retrieves text snippets from webpages, browser search mimics human browsing behavior by navigating websites interactively, providing more detailed results.
+
+
+For latency sensitive use cases, we recommend using Web Search instead.
+
+The use of this tool with a supported model or system in GroqCloud is not a HIPAA Covered Cloud Service under Groq's Business Associate Addendum at this time. This tool is also not available currently for use with regional / sovereign endpoints.
+
+Supported Models
+Built-in browser search is supported for the following models:
+
+Model ID	Model
+openai/gpt-oss-20b
+
+OpenAI GPT-OSS 20B
+openai/gpt-oss-120b
+
+OpenAI GPT-OSS 120B
+
+Note: Browser search is not compatible with structured outputs.
+
+Quick Start
+To use browser search, change the model parameter to one of the supported models.
+
+
+python
+
+from groq import Groq
+
+client = Groq()
+
+chat_completion = client.chat.completions.create(
+    messages=[
+        {
+            "role": "user", 
+            "content": "What happened in AI last week? Give me a concise, one paragraph summary of the most important events."
+        }
+    ],
+    model="openai/gpt-oss-20b",
+    temperature=1,
+    max_completion_tokens=2048,
+    top_p=1,
+    stream=False,
+    stop=None,
+    tool_choice="required",
+    tools=[
+        {
+            "type": "browser_search"
+        }
+    ]
+)
+
+print(chat_completion.choices[0].message.content)
+When the API is called, it will use browser search to best answer the user's query. This tool call is performed on the server side, so no additional setup is required on your part to use this feature.
+
+Final Output
+This is the final response from the model, containing snippets from the web pages that were searched, and the final response at the end. The model combines information from multiple sources to provide a comprehensive response.
+
+
+Pricing
+Please see the Pricing page for more information.
+
+Best Practices
+When using browser search with reasoning models, consider setting reasoning_effort to low to optimize performance and token usage. Higher reasoning effort levels can result in extended browser sessions with more comprehensive web exploration, which may consume significantly more tokens than necessary for most queries. Using low reasoning effort provides a good balance between search quality and efficiency.
+
+Provider Information
+Browser search functionality is powered by Exa, a search engine designed for AI applications. Exa provides comprehensive web browsing capabilities that go beyond traditional search by allowing models to navigate and interact with web content in a more human-like manner.
+
+Was this page helpful?
+
+Yes
+
+No
+
+Suggest Edits
+On this page
+Supported Models
+Quick Start
+Pricing
+Best Practices
+Provider Information
+Browser Search - GroqDocs

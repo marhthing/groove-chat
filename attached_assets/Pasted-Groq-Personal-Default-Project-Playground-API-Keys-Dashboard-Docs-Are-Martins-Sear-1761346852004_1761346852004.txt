@@ -1,0 +1,186 @@
+Groq
+
+Personal
+/
+
+Default Project
+Playground
+API Keys
+Dashboard
+Docs
+
+Are Martins
+
+Search
+K
+Docs
+API Reference
+Get Started
+Overview
+Quickstart
+OpenAI Compatibility
+Responses API
+Models
+Rate Limits
+Examples
+Features
+Text Generation
+Speech to Text
+Text to Speech
+Images and Vision
+Reasoning
+Structured Outputs
+Built-In Tools
+Web Search
+Browser Search
+Visit Website
+Browser Automation
+Code Execution
+Wolfram Alpha
+Compound
+Overview
+Systems
+Built-In Tools
+Use Cases
+Advanced Features
+Batch Processing
+Flex Processing
+Content Moderation
+Prefilling
+Tool Use
+Remote MCP
+LoRA Inference
+Prompting Guide
+Prompt Basics
+Prompt Patterns
+Model Migration
+Prompt Caching
+Production Readiness
+Optimizing Latency
+Production Checklist
+Security Onboarding
+Developer Resources
+Groq Libraries
+Groq Badge
+Integrations Catalog
+Console
+Spend Limits
+Projects
+Model Permissions
+Billing FAQs
+Your Data
+Support & Guidelines
+Developer Community
+OpenBench
+Errors
+Changelog
+Policies & Notices
+Browser Automation
+Copy page
+
+Some models and systems on Groq have native support for advanced browser automation, allowing them to launch and control up to 10 browsers simultaneously to gather comprehensive information from multiple sources. This powerful tool enables parallel web research, deeper analysis, and richer evidence collection.
+
+The use of this tool with a supported model or system in GroqCloud is not a HIPAA Covered Cloud Service under Groq's Business Associate Addendum at this time. This tool is also not available currently for use with regional / sovereign endpoints.
+
+Supported Models
+Browser automation is supported for the following models and systems (on versions later than 2025-07-23):
+
+Model ID	Model
+groq/compound
+
+Compound
+groq/compound-mini
+
+Compound Mini
+
+For a comparison between the groq/compound and groq/compound-mini systems and more information regarding extra capabilities, see the Compound Systems page.
+
+Quick Start
+To use browser automation, you must enable both browser_automation and web_search tools in your request to one of the supported models. The examples below show how to access all parts of the response: the final content, reasoning process, and tool execution details.
+
+
+python
+
+import json
+from groq import Groq
+
+client = Groq(
+    default_headers={
+        "Groq-Model-Version": "latest"
+    }
+)
+
+chat_completion = client.chat.completions.create(
+    messages=[
+        {
+            "role": "user",
+            "content": "What are the latest models on Groq and what are they good at?",
+        }
+    ],
+    model="groq/compound-mini",
+    compound_custom={
+        "tools": {
+            "enabled_tools": ["browser_automation", "web_search"]
+        }
+    }
+)
+
+message = chat_completion.choices[0].message
+
+# Print the final content
+print(message.content)
+
+# Print the reasoning process
+print(message.reasoning)
+
+# Print executed tools
+if message.executed_tools:
+    print(message.executed_tools[0])
+These examples show how to enable browser automation to get deeper search results through parallel browser control.
+
+
+When the API is called with browser automation enabled, it will launch multiple browsers to gather comprehensive information. The response includes three key components:
+
+Content: The final synthesized response from the model based on all browser sessions
+Reasoning: The internal decision-making process showing browser automation steps
+Executed Tools: Detailed information about the browser automation sessions and web searches
+How It Works
+When you enable browser automation:
+
+Tool Activation: Both browser_automation and web_search tools are enabled in your request. Browser automation will not work without both tools enabled.
+Parallel Browser Launch: Up to 10 browsers are launched simultaneously to search different sources
+Deep Content Analysis: Each browser navigates and extracts relevant information from multiple pages
+Evidence Aggregation: Information from all browser sessions is combined and analyzed
+Response Generation: The model synthesizes findings from all sources into a comprehensive response
+Final Output
+This is the final response from the model, containing analysis based on information gathered from multiple browser automation sessions. The model can provide comprehensive insights, multi-source comparisons, and detailed analysis based on extensive web research.
+
+
+Reasoning and Internal Tool Calls
+This shows the model's internal reasoning process and the browser automation sessions it executed to gather information. You can inspect this to understand how the model approached the problem, which browsers it launched, and what sources it accessed. This is useful for debugging and understanding the model's research methodology.
+
+
+Tool Execution Details
+This shows the details of the browser automation operations, including the type of tools executed, browser sessions launched, and the content that was retrieved from multiple sources simultaneously.
+
+
+Pricing
+Please see the Pricing page for more information about costs.
+
+Provider Information
+Browser automation functionality is powered by Anchor Browser, a browser automation platform built for AI agents.
+
+Was this page helpful?
+
+Yes
+
+No
+
+Suggest Edits
+On this page
+Supported Models
+Quick Start
+How It Works
+Pricing
+Provider Information
+Browser Automation - GroqDocs
