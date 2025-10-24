@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 type Theme = "light" | "dark";
@@ -94,24 +94,32 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("theme", theme);
   }, [theme, isInitialized]);
 
-  const setTheme = async (newTheme: Theme) => {
+  const setTheme = useCallback(async (newTheme: Theme) => {
+    console.log("Setting theme to:", newTheme);
     setThemeState(newTheme);
     
-    if (userId) {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (user) {
       try {
+        console.log("Updating theme in database for user:", user.id);
         const { error } = await supabase
           .from('profiles')
           .update({ theme: newTheme })
-          .eq('id', userId);
+          .eq('id', user.id);
         
         if (error) {
           console.error("Error saving theme to database:", error);
+        } else {
+          console.log("Theme saved to database successfully");
         }
       } catch (dbError) {
         console.error("Database error when saving theme:", dbError);
       }
+    } else {
+      console.log("No user logged in, theme saved to localStorage only");
     }
-  };
+  }, []);
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>
