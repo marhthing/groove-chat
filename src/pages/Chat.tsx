@@ -505,15 +505,21 @@ const Chat = () => {
     try {
       // Prepare all messages including the new user message
       // For the latest message, use actualContent which includes document text
-      const allMessages = [...messages, userMessage].map((m, index) => ({
+      const messagesForAI = [...messages].map(m => ({
         role: m.role,
-        content: (index === messages.length && processedDocument) ? actualContent : m.content,
+        content: m.content,
       }));
+      
+      // Add the new user message with enhanced content if there's a document
+      messagesForAI.push({
+        role: "user",
+        content: actualContent, // Use actualContent which includes document text
+      });
 
       // Optimize context if conversation is getting too long (keep last 20 messages)
-      const optimizedMessages = allMessages.length > 20 
-        ? allMessages.slice(-20) 
-        : allMessages;
+      const optimizedMessages = messagesForAI.length > 20 
+        ? messagesForAI.slice(-20) 
+        : messagesForAI;
 
       const apiKey = import.meta.env.VITE_GROQ_API_KEY;
       if (!apiKey) {
