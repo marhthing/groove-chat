@@ -114,7 +114,7 @@ export const ChatSidebar = ({
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      <div className="p-3 border-b border-sidebar-border">
+      <div className="p-4 border-b border-sidebar-border">
         <h1 className="text-lg font-semibold mb-3">{BRAND_NAME}</h1>
         <Button
           onClick={onNewChat}
@@ -128,7 +128,7 @@ export const ChatSidebar = ({
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="space-y-1 p-3">
+        <div className="space-y-1 p-4">
           {conversations.map((conv) => (
             <div
               key={conv.id}
@@ -192,7 +192,7 @@ export const ChatSidebar = ({
 
       <Separator />
 
-      <div className="p-3">
+      <div className="p-4">
         <Button
           onClick={handleLogout}
           variant="ghost"

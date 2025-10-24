@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -332,18 +331,26 @@ const Chat = () => {
     return null;
   }
 
+  // Sidebar content can be extracted and reused for both mobile and desktop
+  const sidebarContent = (
+    <ChatSidebar
+      conversations={conversations}
+      currentConversationId={currentConversationId}
+      onNewChat={createNewConversation}
+      onSelectConversation={setCurrentConversationId}
+      onDeleteConversation={deleteConversation}
+      onRenameConversation={renameConversation}
+      isOpen={isSidebarOpen}
+      onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+    />
+  );
+
   return (
     <div className="flex h-screen bg-background overflow-hidden">
-      <ChatSidebar
-        conversations={conversations}
-        currentConversationId={currentConversationId}
-        onNewChat={createNewConversation}
-        onSelectConversation={setCurrentConversationId}
-        onDeleteConversation={deleteConversation}
-        onRenameConversation={renameConversation}
-        isOpen={isSidebarOpen}
-        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
-      />
+      {/* Desktop Sidebar */}
+      <div className="hidden md:flex md:w-64 lg:w-72 border-r border-sidebar-border bg-sidebar flex-shrink-0">
+        {sidebarContent}
+      </div>
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         {/* Mobile menu button - absolute positioned */}
