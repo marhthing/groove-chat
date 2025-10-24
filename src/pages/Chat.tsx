@@ -6,7 +6,6 @@ import { ChatMessage } from "@/components/ChatMessage";
 import { ChatInput } from "@/components/ChatInput";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { BouncingDots } from "@/components/ui/bouncing-dots";
 import { Menu, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Session } from "@supabase/supabase-js";
@@ -334,11 +333,6 @@ const Chat = () => {
       };
       setMessages((prev) => [...prev, assistantMessage]);
 
-      // Force scroll after image is added
-      setTimeout(() => {
-        scrollToBottom();
-      }, 100);
-
       // Save assistant message with image_url to database
       await supabase.from("messages").insert({
         conversation_id: conversationId,
@@ -359,10 +353,6 @@ const Chat = () => {
       });
     } finally {
       setIsLoading(false);
-      // Force another scroll after loading state changes
-      setTimeout(() => {
-        scrollToBottom();
-      }, 100);
     }
   };
 
@@ -667,23 +657,6 @@ const Chat = () => {
                     content={message.content}
                   />
                 ))}
-                {isLoading && (
-                  <div className="w-full py-2 bg-muted/30">
-                    <div className="max-w-4xl mx-auto px-3">
-                      <div className="flex gap-2 md:gap-3 justify-start">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center">
-                          <span className="text-xs text-accent-foreground">AI</span>
-                        </div>
-                        <div className="flex flex-col space-y-1 min-w-0 flex-1">
-                          <p className="text-xs font-medium text-muted-foreground">{BRAND_NAME}</p>
-                          <div className="bg-card border border-border rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm">
-                            <BouncingDots className="text-muted-foreground" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </ScrollArea>
