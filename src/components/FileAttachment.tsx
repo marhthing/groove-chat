@@ -5,7 +5,7 @@ import { Badge } from "./ui/badge";
 export interface AttachedFile {
   file: File;
   preview?: string;
-  type: 'image' | 'pdf' | 'docx' | 'excel' | 'other';
+  type: 'image' | 'pdf' | 'docx' | 'excel' | 'csv' | 'other';
 }
 
 interface FileAttachmentProps {
@@ -25,6 +25,7 @@ export const FileAttachment = ({ attachedFile, onRemove }: FileAttachmentProps) 
       case 'docx':
         return <FileType className="h-4 w-4" />;
       case 'excel':
+      case 'csv':
         return <Sheet className="h-4 w-4" />;
       default:
         return <FileText className="h-4 w-4" />;

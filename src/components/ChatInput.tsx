@@ -25,10 +25,13 @@ export const ChatInput = ({
 
   const getFileType = (file: File): AttachedFile['type'] => {
     const mimeType = file.type;
+    const fileName = file.name.toLowerCase();
+    
     if (mimeType.startsWith('image/')) return 'image';
     if (mimeType === 'application/pdf') return 'pdf';
     if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return 'docx';
     if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return 'excel';
+    if (mimeType === 'text/csv' || fileName.endsWith('.csv')) return 'csv';
     return 'other';
   };
 
@@ -39,11 +42,11 @@ export const ChatInput = ({
     const fileType = getFileType(file);
 
     // Validate file type
-    const allowedTypes = ['image', 'pdf', 'docx', 'excel'];
+    const allowedTypes = ['image', 'pdf', 'docx', 'excel', 'csv'];
     if (!allowedTypes.includes(fileType)) {
       toast({
         title: "Unsupported file type",
-        description: "Supported: Images, PDF, Word, Excel",
+        description: "Supported: Images, PDF, Word, Excel, CSV",
         variant: "destructive",
       });
       return;

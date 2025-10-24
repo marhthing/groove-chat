@@ -25,6 +25,7 @@ export const ChatMessage = ({ role, content, fileName, fileType }: ChatMessagePr
       case 'pdf':
         return <FileText className="h-3 w-3" />;
       case 'excel':
+      case 'csv':
         return <FileSpreadsheet className="h-3 w-3" />;
       case 'docx':
         return <FileText className="h-3 w-3" />;

@@ -11,7 +11,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 ).toString();
 
 export interface ProcessedDocument {
-  type: 'image' | 'pdf' | 'docx' | 'excel';
+  type: 'image' | 'pdf' | 'docx' | 'excel' | 'csv';
   filename: string;
   data?: string; // base64 for images
   text?: string; // extracted text for documents
@@ -341,6 +341,110 @@ async function extractExcelText(file: File): Promise<string> {
 }
 
 /**
+ * Extract and optimize CSV text with intelligent adaptive truncation
+ */
+async function extractCsvText(file: File): Promise<string> {
+  const text = await file.text();
+  const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  
+  const TARGET_TOKENS = 8000;
+  const MAX_CHARS = TARGET_TOKENS * 4;
+  
+  // If CSV fits within limits, return as-is
+  if (text.length <= MAX_CHARS) {
+    return text;
+  }
+  
+  // Calculate compression ratio needed
+  const compressionRatio = MAX_CHARS / text.length;
+  const totalRows = lines.length - 1; // Exclude header
+  const targetRows = Math.floor(totalRows * compressionRatio);
+  
+  let result = '';
+  
+  // Always include header
+  if (lines.length > 0) {
+    result += lines[0] + '\n';
+  }
+  
+  if (lines.length <= 1) {
+    return result;
+  }
+  
+  // Light compression (>85% kept) - just trim the tail
+  if (compressionRatio > 0.85) {
+    const rowsToKeep = Math.max(targetRows, Math.floor(totalRows * 0.85));
+    for (let i = 1; i <= rowsToKeep; i++) {
+      result += lines[i] + '\n';
+    }
+    if (rowsToKeep < totalRows) {
+      result += `... [${totalRows - rowsToKeep} rows omitted from end] ...\n`;
+    }
+  }
+  // Moderate compression (50-85% kept) - smart sampling
+  else if (compressionRatio > 0.5) {
+    const keepFirst = Math.floor(targetRows * 0.5);
+    const keepLast = Math.floor(targetRows * 0.3);
+    const keepMiddle = targetRows - keepFirst - keepLast;
+    
+    // First rows
+    for (let i = 1; i <= keepFirst; i++) {
+      result += lines[i] + '\n';
+    }
+    
+    // Middle sample
+    const middleStart = Math.floor(totalRows / 2) - Math.floor(keepMiddle / 2);
+    if (keepMiddle > 0 && totalRows > keepFirst + keepLast + 20) {
+      result += `... [${middleStart - keepFirst - 1} rows omitted] ...\n`;
+      for (let i = 0; i < keepMiddle; i++) {
+        result += lines[middleStart + i] + '\n';
+      }
+    }
+    
+    // Last rows
+    if (keepLast > 0) {
+      const lastStart = totalRows - keepLast + 1;
+      if (lastStart > keepFirst + keepMiddle) {
+        result += `... [${lastStart - keepFirst - keepMiddle - 1} rows omitted] ...\n`;
+      }
+      for (let i = lastStart; i <= totalRows; i++) {
+        result += lines[i] + '\n';
+      }
+    }
+  }
+  // Heavy compression (<50% kept)
+  else {
+    const keepFirst = Math.floor(targetRows * 0.4);
+    const keepMiddle = Math.floor(targetRows * 0.2);
+    const keepLast = Math.floor(targetRows * 0.4);
+    
+    // First rows
+    for (let i = 1; i <= keepFirst; i++) {
+      result += lines[i] + '\n';
+    }
+    result += `... [significant data omitted] ...\n`;
+    
+    // Middle sample
+    if (keepMiddle > 0) {
+      const middleStart = Math.floor(totalRows / 2);
+      for (let i = 0; i < keepMiddle; i++) {
+        result += lines[middleStart + i] + '\n';
+      }
+      result += `... [significant data omitted] ...\n`;
+    }
+    
+    // Last rows
+    for (let i = totalRows - keepLast + 1; i <= totalRows; i++) {
+      result += lines[i] + '\n';
+    }
+  }
+  
+  result += `\n[Total rows in CSV: ${totalRows}, Rows included: ${targetRows}]\n`;
+  
+  return result;
+}
+
+/**
  * Process and upload a file using Supabase Storage
  */
 export async function processFileUpload(
@@ -396,6 +500,8 @@ export async function processFileUpload(
       extractedText = await extractDocxText(uploadFile);
     } else if (type === 'excel') {
       extractedText = await extractExcelText(uploadFile);
+    } else if (type === 'csv') {
+      extractedText = await extractCsvText(uploadFile);
     }
 
     // Upload to Supabase Storage
