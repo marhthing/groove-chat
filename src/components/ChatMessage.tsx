@@ -37,34 +37,34 @@ export const ChatMessage = ({ role, content }: ChatMessageProps) => {
   }, [isUser]);
 
   return (
-    <div className={`w-full py-6 px-4 ${isUser ? "bg-background" : "bg-muted/30"}`} data-testid={`message-${role}`}>
-      <div className="max-w-4xl mx-auto">
+    <div className={`w-full py-4 ${isUser ? "bg-background" : "bg-muted/30"}`} data-testid={`message-${role}`}>
+      <div className="max-w-4xl mx-auto px-4">
         {isUser ? (
           // User message - right aligned
-          <div className="flex gap-3 md:gap-4 justify-end">
-            <div className="flex flex-col items-end space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">You</p>
-              <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm max-w-[85%] md:max-w-[600px]">
+          <div className="flex gap-2 md:gap-3 justify-end">
+            <div className="flex flex-col items-end space-y-1">
+              <p className="text-xs font-medium text-muted-foreground">You</p>
+              <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-3 py-2 shadow-sm max-w-[80%] md:max-w-[500px]">
                 <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
                   {content}
                 </div>
               </div>
             </div>
-            <Avatar className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10">
+            <Avatar className="flex-shrink-0 w-8 h-8">
               <AvatarImage src={profilePicture || undefined} />
-              <AvatarFallback className="bg-primary text-primary-foreground">{userInitials}</AvatarFallback>
+              <AvatarFallback className="bg-primary text-primary-foreground text-xs">{userInitials}</AvatarFallback>
             </Avatar>
           </div>
         ) : (
           // AI message - left aligned
-          <div className="flex gap-3 md:gap-4 justify-start">
-            <Avatar className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10">
+          <div className="flex gap-2 md:gap-3 justify-start">
+            <Avatar className="flex-shrink-0 w-8 h-8">
               <AvatarImage src="/ai.jpg" alt={BRAND_NAME} />
-              <AvatarFallback className="bg-accent text-accent-foreground">AI</AvatarFallback>
+              <AvatarFallback className="bg-accent text-accent-foreground text-xs">AI</AvatarFallback>
             </Avatar>
-            <div className="flex flex-col space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">{BRAND_NAME}</p>
-              <div className="bg-card border border-border rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm max-w-[85%] md:max-w-[600px]">
+            <div className="flex flex-col space-y-1 min-w-0 flex-1">
+              <p className="text-xs font-medium text-muted-foreground">{BRAND_NAME}</p>
+              <div className="bg-card border border-border rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm max-w-[80%] md:max-w-[500px]">
                 <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
                   {content}
                 </div>
