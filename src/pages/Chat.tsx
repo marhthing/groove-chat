@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ChatSidebar } from "@/components/ChatSidebar";
 import { ChatMessage } from "@/components/ChatMessage";
@@ -28,6 +28,7 @@ interface Conversation {
 }
 
 const Chat = () => {
+  const { conversationId } = useParams<{ conversationId?: string }>();
   const [session, setSession] = useState<Session | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
@@ -64,6 +65,15 @@ const Chat = () => {
       loadConversations();
     }
   }, [session]);
+
+  useEffect(() => {
+    if (conversationId) {
+      setCurrentConversationId(conversationId);
+    } else {
+      setCurrentConversationId(null);
+      setMessages([]);
+    }
+  }, [conversationId]);
 
   useEffect(() => {
     if (currentConversationId) {
@@ -177,8 +187,8 @@ const Chat = () => {
   };
 
   const createNewConversation = async () => {
-    // Just clear the current conversation and messages
-    // Don't create in database until user sends first message
+    // Navigate to /chat without an ID to start a new conversation
+    navigate("/chat");
     setCurrentConversationId(null);
     setMessages([]);
     // Reset selected model to default when creating a new conversation
@@ -208,6 +218,7 @@ const Chat = () => {
       });
     } else {
       if (currentConversationId === conversationId) {
+        navigate("/chat");
         setCurrentConversationId(null);
         setMessages([]);
       }
@@ -268,6 +279,7 @@ const Chat = () => {
         }
         conversationId = data.id;
         setCurrentConversationId(data.id);
+        navigate(`/chat/${data.id}`);
         await loadConversations();
       }
 
@@ -387,6 +399,7 @@ const Chat = () => {
       }
       conversationId = data.id;
       setCurrentConversationId(data.id);
+      navigate(`/chat/${data.id}`);
     }
 
     // Add user message to UI
@@ -551,7 +564,7 @@ const Chat = () => {
       conversations={conversations}
       currentConversationId={currentConversationId}
       onNewChat={createNewConversation}
-      onSelectConversation={setCurrentConversationId}
+      onSelectConversation={(id) => navigate(`/chat/${id}`)}
       onDeleteConversation={deleteConversation}
       onRenameConversation={renameConversation}
       isOpen={isSidebarOpen}
@@ -560,7 +573,7 @@ const Chat = () => {
       onSelectModel={(model) => {
         setSelectedModel(model);
         setMessages([]);
-        setCurrentConversationId(null);
+        navigate("/chat");
       }}
     />
   );
