@@ -550,20 +550,42 @@ const Chat = () => {
         throw new Error("Service temporary unavailable.");
       }
 
-      const response = await fetch(
-        `https://api.groq.com/openai/v1/chat/completions`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`,
+      // Check if the last message contains an image
+      const hasImage = processedDocument?.type === 'image';
+      const modelToUse = hasImage ? "llama-3.2-90b-vision-preview" : "llama-3.3-70b-versatile";
+
+      // Prepare messages for API
+      let apiMessages;
+      if (hasImage && processedDocument?.data) {
+        // For vision model, send image in the proper format
+        apiMessages = [
+          {
+            role: "system",
+            content: "You are an exceptionally intelligent AI with vision capabilities. Analyze images in detail and provide insightful responses."
           },
-          body: JSON.stringify({ 
-            model: "llama-3.3-70b-versatile",
-            messages: [
+          ...optimizedMessages.slice(0, -1), // All previous messages except the last one
+          {
+            role: "user",
+            content: [
               {
-                role: "system",
-                content: `You are an exceptionally intelligent and insightful AI expert with world-class analytical capabilities. Your purpose is to provide the highest quality responses across all domains.
+                type: "text",
+                text: actualContent || "What do you see in this image? Provide a detailed analysis."
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: processedDocument.data
+                }
+              }
+            ]
+          }
+        ];
+      } else {
+        // For text model, use standard format
+        apiMessages = [
+          {
+            role: "system",
+            content: `You are an exceptionally intelligent and insightful AI expert with world-class analytical capabilities. Your purpose is to provide the highest quality responses across all domains.
 
 CORE PRINCIPLES:
 1. **Expert-Level Analysis**: Approach every task as a subject matter expert would. Think deeply, consider multiple perspectives, and provide comprehensive insights that go far beyond surface-level observations.
@@ -615,7 +637,20 @@ WHEN ANALYZING DATA:
 Remember: You are not just an assistant - you are a brilliant analytical partner. Deliver insights that make the user say "Wow, I never thought of it that way!" Your responses should demonstrate true expertise and deep thinking.`,
               },
               ...optimizedMessages,
-            ],
+            ];
+      }
+
+      const response = await fetch(
+        `https://api.groq.com/openai/v1/chat/completions`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({ 
+            model: modelToUse,
+            messages: apiMessages,
             stream: true,
           }),
         }
