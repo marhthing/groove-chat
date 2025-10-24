@@ -86,24 +86,32 @@ const Chat = () => {
   }, [currentConversationId]);
 
   useEffect(() => {
-    // Double requestAnimationFrame to ensure DOM has fully updated and painted
-    requestAnimationFrame(() => {
+    // Auto-scroll to bottom whenever messages change
+    // Use timeout + requestAnimationFrame for more reliable scrolling
+    const scrollTimer = setTimeout(() => {
       requestAnimationFrame(() => {
-        if (scrollRef.current) {
-          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-        }
+        requestAnimationFrame(() => {
+          if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+          }
+        });
       });
-    });
+    }, 100);
+
+    return () => clearTimeout(scrollTimer);
   }, [messages]);
 
   const scrollToBottom = () => {
-    requestAnimationFrame(() => {
+    // Scroll to bottom with a slight delay to ensure DOM is fully rendered
+    setTimeout(() => {
       requestAnimationFrame(() => {
-        if (scrollRef.current) {
-          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-        }
+        requestAnimationFrame(() => {
+          if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+          }
+        });
       });
-    });
+    }, 100);
   };
 
   const loadConversations = async () => {
@@ -180,6 +188,9 @@ const Chat = () => {
         file_name: msg.file_name,
         file_type: msg.file_type,
       })));
+      
+      // Scroll to bottom after loading messages
+      scrollToBottom();
 
       // Load the model type for the selected conversation
       const conversation = conversations.find(c => c.id === conversationId);
