@@ -113,10 +113,10 @@ export const ChatSidebar = ({
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      <div className="p-3 md:p-4 border-b border-sidebar-border">
+      <div className="p-3 border-b border-sidebar-border">
         <Button
           onClick={onNewChat}
-          className="w-full justify-start gap-2 text-sm md:text-base"
+          className="w-full justify-start gap-2 text-sm"
           variant="default"
           data-testid="button-new-chat"
         >
@@ -125,8 +125,8 @@ export const ChatSidebar = ({
         </Button>
       </div>
 
-      <ScrollArea className="flex-1 p-3 md:p-4">
-        <div className="space-y-2">
+      <ScrollArea className="flex-1 p-2 md:p-3">
+        <div className="space-y-1">
           {conversations.map((conv) => (
             <div
               key={conv.id}
@@ -139,19 +139,19 @@ export const ChatSidebar = ({
                   onSelectConversation(conv.id);
                   if (window.innerWidth < 768) onToggle();
                 }}
-                className="w-full text-left p-2.5 md:p-3 rounded-lg transition-colors flex items-start gap-2 hover:bg-sidebar-accent"
+                className="w-full text-left p-2 rounded-lg transition-colors flex items-start gap-2 hover:bg-sidebar-accent"
                 data-testid={`button-conversation-${conv.id}`}
               >
                 <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs md:text-sm font-medium truncate">{conv.title}</p>
+                  <p className="text-sm font-medium truncate">{conv.title}</p>
                   <p className="text-xs text-muted-foreground">
                     {new Date(conv.updated_at).toLocaleDateString()}
                   </p>
                 </div>
               </button>
 
-              <div className="absolute right-2 top-2.5 md:top-3 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -190,11 +190,11 @@ export const ChatSidebar = ({
 
       <Separator />
 
-      <div className="p-3 md:p-4">
+      <div className="p-3">
         <Button
           onClick={handleLogout}
           variant="ghost"
-          className="w-full justify-start gap-2 text-sm md:text-base"
+          className="w-full justify-start gap-2 text-sm"
           data-testid="button-logout"
         >
           <LogOut className="h-4 w-4" />
@@ -214,7 +214,7 @@ export const ChatSidebar = ({
       </Sheet>
 
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex w-64 border-r border-sidebar-border bg-sidebar">
+      <div className="hidden md:flex md:w-56 lg:w-64 border-r border-sidebar-border bg-sidebar flex-shrink-0">
         {sidebarContent}
       </div>
 
