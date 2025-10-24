@@ -36,16 +36,6 @@ export const ChatInput = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size (20MB limit)
-    if (file.size > 20 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Maximum file size is 20MB",
-        variant: "destructive",
-      });
-      return;
-    }
-
     const fileType = getFileType(file);
 
     // Validate file type
@@ -57,6 +47,29 @@ export const ChatInput = ({
         variant: "destructive",
       });
       return;
+    }
+
+    // Different size limits for different file types
+    if (fileType === 'image') {
+      // Groq vision model limit is 4MB for base64 encoded images
+      if (file.size > 4 * 1024 * 1024) {
+        toast({
+          title: "Image too large",
+          description: "Maximum image size is 4MB (Groq vision model limit)",
+          variant: "destructive",
+        });
+        return;
+      }
+    } else {
+      // Other document types can be up to 20MB
+      if (file.size > 20 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Maximum file size is 20MB",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     // Create preview for images
