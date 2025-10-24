@@ -533,29 +533,15 @@ const Chat = () => {
         ? messagesForAI.slice(-20) 
         : messagesForAI;
 
-      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
-      if (!apiKey) {
-        throw new Error("Service temporary unavailable.");
-      }
-
       const response = await fetch(
-        `https://api.groq.com/openai/v1/chat/completions`,
+        `http://localhost:3001/api/chat`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`,
           },
           body: JSON.stringify({ 
-            model: "llama-3.3-70b-versatile",
-            messages: [
-              {
-                role: "system",
-                content: "You are Groove AI, a friendly and energetic AI assistant with a passion for helping people. You communicate with enthusiasm and clarity, making complex topics easy to understand. You're knowledgeable, patient, and always eager to assist. You have a warm, approachable personality and enjoy building genuine connections with users. You're modern, tech-savvy, and stay current with the latest trends. Keep your responses clear, engaging, and conversational.",
-              },
-              ...optimizedMessages,
-            ],
-            stream: true,
+            messages: optimizedMessages,
           }),
         }
       );

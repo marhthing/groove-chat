@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "tsx server/index.ts",
     "client": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
@@ -42,6 +43,8 @@
     "@radix-ui/react-tooltip": "^1.2.7",
     "@supabase/supabase-js": "^2.76.1",
     "@tanstack/react-query": "^5.83.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.4",
     "@types/marked": "^5.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -69,6 +72,7 @@
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "tsx": "^4.20.6",
     "vaul": "^0.9.9",
     "xlsx": "https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz",
     "zod": "^3.25.76"
