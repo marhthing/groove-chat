@@ -199,13 +199,13 @@ export const ChatSidebar = ({
                 </div>
               </button>
 
-              <div className="absolute right-2 top-2">
+              <div className="absolute right-2 top-2 z-10">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-8 w-8 bg-sidebar hover:bg-sidebar-accent"
                       onClick={(e) => e.stopPropagation()}
                       data-testid={`button-options-${conv.id}`}
                     >
