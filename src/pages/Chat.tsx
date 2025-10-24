@@ -317,12 +317,49 @@ const Chat = () => {
         .join(", ");
 
       // Combine previous context with new prompt
-      const fullPrompt = previousUserPrompts 
+      const conversationContext = previousUserPrompts 
         ? `${previousUserPrompts}, ${prompt}`
         : prompt;
 
-      // Generate image using Pollinations.ai with full context
-      const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=1024&height=1024&nologo=true`;
+      // Use Groq AI to synthesize a clear, coherent prompt for image generation
+      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+      if (!apiKey) {
+        throw new Error("GROQ API key is not configured.");
+      }
+
+      const synthResponse = await fetch(
+        `https://api.groq.com/openai/v1/chat/completions`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: "llama-3.3-70b-versatile",
+            messages: [
+              {
+                role: "system",
+                content: "You are an expert at converting conversational requests into clear, detailed image generation prompts. Take the user's conversation and create a single, coherent, detailed description for an image. Be specific and descriptive. Only respond with the image description, nothing else.",
+              },
+              {
+                role: "user",
+                content: `Convert this conversation into a single detailed image prompt: ${conversationContext}`,
+              },
+            ],
+          }),
+        }
+      );
+
+      if (!synthResponse.ok) {
+        throw new Error("Failed to synthesize prompt");
+      }
+
+      const synthData = await synthResponse.json();
+      const synthesizedPrompt = synthData.choices?.[0]?.message?.content || conversationContext;
+
+      // Generate image using Pollinations.ai with synthesized prompt
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(synthesizedPrompt)}?width=1024&height=1024&nologo=true`;
 
       // Add assistant message with image to UI
       const assistantMessage: Message = {
