@@ -71,19 +71,23 @@ const Chat = () => {
   }, [currentConversationId]);
 
   useEffect(() => {
-    // Use requestAnimationFrame to ensure DOM has updated
+    // Double requestAnimationFrame to ensure DOM has fully updated and painted
     requestAnimationFrame(() => {
-      if (scrollRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-      }
+      requestAnimationFrame(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+      });
     });
   }, [messages]);
 
   const scrollToBottom = () => {
     requestAnimationFrame(() => {
-      if (scrollRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-      }
+      requestAnimationFrame(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+      });
     });
   };
 
