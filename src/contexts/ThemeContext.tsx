@@ -10,34 +10,45 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("light");
   const [userId, setUserId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const initializeTheme = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        setUserId(user.id);
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('theme')
-          .eq('id', user.id)
-          .single();
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
         
-        if (profile?.theme) {
-          setThemeState(profile.theme as Theme);
+        if (user) {
+          setUserId(user.id);
+          
+          try {
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('theme')
+              .eq('id', user.id)
+              .single();
+            
+            if (!error && profile?.theme) {
+              setThemeState(profile.theme as Theme);
+            } else {
+              setThemeState("light");
+            }
+          } catch (dbError) {
+            console.log("Theme column might not exist yet, using default");
+            setThemeState("light");
+          }
         } else {
-          setThemeState("light");
+          const stored = localStorage.getItem("theme") as Theme;
+          setThemeState(stored || "light");
         }
-      } else {
-        const stored = localStorage.getItem("theme") as Theme;
-        setThemeState(stored || "light");
+      } catch (error) {
+        console.error("Error initializing theme:", error);
+        setThemeState("light");
+      } finally {
+        setIsInitialized(true);
       }
-      
-      setIsLoading(false);
     };
 
     initializeTheme();
@@ -45,15 +56,21 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         setUserId(session.user.id);
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('theme')
-          .eq('id', session.user.id)
-          .single();
         
-        if (profile?.theme) {
-          setThemeState(profile.theme as Theme);
-        } else {
+        try {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('theme')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (!error && profile?.theme) {
+            setThemeState(profile.theme as Theme);
+          } else {
+            setThemeState("light");
+          }
+        } catch (dbError) {
+          console.log("Theme column might not exist yet, using default");
           setThemeState("light");
         }
       } else if (event === 'SIGNED_OUT') {
@@ -69,23 +86,30 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   useEffect(() => {
+    if (!isInitialized) return;
+    
     const root = window.document.documentElement;
     root.classList.remove("light", "dark");
     root.classList.add(theme);
-    
-    if (!isLoading) {
-      localStorage.setItem("theme", theme);
-    }
-  }, [theme, isLoading]);
+    localStorage.setItem("theme", theme);
+  }, [theme, isInitialized]);
 
   const setTheme = async (newTheme: Theme) => {
     setThemeState(newTheme);
     
     if (userId) {
-      await supabase
-        .from('profiles')
-        .update({ theme: newTheme })
-        .eq('id', userId);
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ theme: newTheme })
+          .eq('id', userId);
+        
+        if (error) {
+          console.error("Error saving theme to database:", error);
+        }
+      } catch (dbError) {
+        console.error("Database error when saving theme:", dbError);
+      }
     }
   };
 
@@ -94,12 +118,12 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
       {children}
     </ThemeContext.Provider>
   );
-};
+}
 
-export const useTheme = () => {
+export function useTheme() {
   const context = useContext(ThemeContext);
   if (!context) {
     throw new Error("useTheme must be used within ThemeProvider");
   }
   return context;
-};
+}

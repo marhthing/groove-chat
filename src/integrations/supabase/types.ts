@@ -80,6 +80,7 @@ export type Database = {
           last_name: string | null
           onboarding_completed: boolean
           profile_picture: string | null
+          theme: string
           updated_at: string
         }
         Insert: {
@@ -91,6 +92,7 @@ export type Database = {
           last_name?: string | null
           onboarding_completed?: boolean
           profile_picture?: string | null
+          theme?: string
           updated_at?: string
         }
         Update: {
@@ -102,6 +104,7 @@ export type Database = {
           last_name?: string | null
           onboarding_completed?: boolean
           profile_picture?: string | null
+          theme?: string
           updated_at?: string
         }
         Relationships: []
