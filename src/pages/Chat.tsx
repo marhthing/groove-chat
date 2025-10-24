@@ -173,27 +173,13 @@ const Chat = () => {
         variant: "destructive",
       });
     } else {
-      setMessages((data || []).map(msg => {
-        // For UI display: extract just the user's question from document messages
-        let displayContent = msg.content;
-        if (msg.role === 'user' && msg.file_name) {
-          // Extract the user's question from the enhanced content
-          const questionMatch = msg.content.match(/My question: (.+)$/);
-          if (questionMatch) {
-            displayContent = questionMatch[1];
-          } else if (msg.content.includes('Please analyze this document')) {
-            displayContent = ''; // Empty if no specific question
-          }
-        }
-        
-        return {
-          ...msg,
-          role: msg.role as "user" | "assistant",
-          content: msg.image_url ? `![Generated Image](${msg.image_url})` : displayContent,
-          file_name: msg.file_name,
-          file_type: msg.file_type,
-        };
-      }));
+      setMessages((data || []).map(msg => ({
+        ...msg,
+        role: msg.role as "user" | "assistant",
+        content: msg.image_url ? `![Generated Image](${msg.image_url})` : msg.content,
+        file_name: msg.file_name,
+        file_type: msg.file_type,
+      })));
 
       // Load the model type for the selected conversation
       const conversation = conversations.find(c => c.id === conversationId);
@@ -482,18 +468,20 @@ const Chat = () => {
     const userMessage: Message = {
       id: crypto.randomUUID(),
       role: "user",
-      content, // Display only user's message
+      content: content || '', // Display only user's message (may be empty for "analyze this" requests)
       created_at: new Date().toISOString(),
       file_name: processedDocument?.filename,
       file_type: processedDocument?.type,
     };
     setMessages((prev) => [...prev, userMessage]);
 
-    // Save user message to database with full content including document text
+    // Save user message to database
+    // Store ONLY the user's text, not the document content
+    // The AI will get the document content from messagesForAI below
     const { error: userError } = await supabase.from("messages").insert({
       conversation_id: conversationId,
       role: "user",
-      content: actualContent, // Store the enhanced content with document text
+      content: content || '', // Store only user's text
       file_name: processedDocument?.filename,
       file_type: processedDocument?.type,
     });
@@ -517,23 +505,24 @@ const Chat = () => {
 
     // Call AI chat function
     try {
-      // Load full messages from database to get complete context including document text
+      // Load messages from database (these now only contain user text, not document content)
       const { data: dbMessages } = await supabase
         .from("messages")
         .select("role, content")
         .eq("conversation_id", conversationId)
         .order("created_at", { ascending: true });
       
-      // Prepare all messages including the new user message
+      // Prepare all messages for AI
       const messagesForAI = (dbMessages || []).map(m => ({
         role: m.role,
         content: m.content,
       }));
       
-      // Add the new user message with enhanced content if there's a document
+      // For the NEW message only, add enhanced content with document text
+      // This ensures the AI gets the document but it's not stored in DB or shown in UI
       messagesForAI.push({
         role: "user",
-        content: actualContent, // Use actualContent which includes document text
+        content: actualContent, // Enhanced content with document text
       });
 
       // Optimize context if conversation is getting too long (keep last 20 messages)

@@ -1,4 +1,3 @@
-
 import { AttachedFile } from "@/components/FileAttachment";
 import { supabase } from "@/integrations/supabase/client";
 import * as pdfjsLib from 'pdfjs-dist';
@@ -32,32 +31,32 @@ async function compressImage(file: File): Promise<string> {
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
-        
+
         // Calculate max dimensions (33 megapixels)
         const maxPixels = 33 * 1024 * 1024;
         const currentPixels = width * height;
-        
+
         if (currentPixels > maxPixels) {
           const ratio = Math.sqrt(maxPixels / currentPixels);
           width = Math.floor(width * ratio);
           height = Math.floor(height * ratio);
         }
-        
+
         canvas.width = width;
         canvas.height = height;
-        
+
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        
+
         // Try different quality levels to get under 4MB
         let quality = 0.9;
         let base64 = canvas.toDataURL('image/jpeg', quality);
-        
+
         while (base64.length > 4 * 1024 * 1024 && quality > 0.1) {
           quality -= 0.1;
           base64 = canvas.toDataURL('image/jpeg', quality);
         }
-        
+
         resolve(base64);
       };
       img.onerror = reject;
@@ -74,19 +73,19 @@ async function compressImage(file: File): Promise<string> {
 async function extractPdfText(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
   const uint8Array = new Uint8Array(arrayBuffer);
-  
+
   const pdf = await pdfjsLib.getDocument({ data: uint8Array }).promise;
   let text = '';
-  const MAX_CHARS = 20000; // Limit to ~5000 tokens
-  
+  const MAX_CHARS = 8000; // Limit to ~2000 tokens (safer for Groq's 12k limit)
+
   // Extract all pages first to get total count
   const totalPages = pdf.numPages;
-  
+
   // If few pages, extract all
   if (totalPages <= 10) {
     for (let i = 1; i <= totalPages; i++) {
       if (text.length >= MAX_CHARS) break;
-      
+
       const page = await pdf.getPage(i);
       const content = await page.getTextContent();
       const pageText = content.items.map((item: any) => item.str).join(' ');
@@ -97,7 +96,7 @@ async function extractPdfText(file: File): Promise<string> {
     const firstPages = 3;
     const middlePages = 2;
     const lastPages = 3;
-    
+
     // First pages
     for (let i = 1; i <= firstPages; i++) {
       const page = await pdf.getPage(i);
@@ -105,20 +104,20 @@ async function extractPdfText(file: File): Promise<string> {
       const pageText = content.items.map((item: any) => item.str).join(' ');
       text += `\n--- Page ${i} ---\n${pageText}\n`;
     }
-    
+
     // Middle pages
     const middleStart = Math.floor(totalPages / 2);
     text += `\n... [Pages ${firstPages + 1} to ${middleStart - 1} omitted] ...\n`;
     for (let i = 0; i < middlePages; i++) {
       const pageNum = middleStart + i;
       if (pageNum > totalPages - lastPages) break;
-      
+
       const page = await pdf.getPage(pageNum);
       const content = await page.getTextContent();
       const pageText = content.items.map((item: any) => item.str).join(' ');
       text += `\n--- Page ${pageNum} ---\n${pageText}\n`;
     }
-    
+
     // Last pages
     text += `\n... [Pages ${middleStart + middlePages} to ${totalPages - lastPages} omitted] ...\n`;
     for (let i = totalPages - lastPages + 1; i <= totalPages; i++) {
@@ -127,15 +126,15 @@ async function extractPdfText(file: File): Promise<string> {
       const pageText = content.items.map((item: any) => item.str).join(' ');
       text += `\n--- Page ${i} ---\n${pageText}\n`;
     }
-    
+
     text = `[PDF Document: ${totalPages} pages total, showing sample pages]\n` + text;
   }
-  
+
   // Final safety check
   if (text.length > MAX_CHARS) {
     text = text.substring(0, MAX_CHARS) + '\n\n[Document truncated to fit token limits]';
   }
-  
+
   return text;
 }
 
@@ -146,16 +145,16 @@ async function extractDocxText(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
   const result = await mammoth.extractRawText({ arrayBuffer });
   let text = result.value;
-  
-  const MAX_CHARS = 20000; // Limit to ~5000 tokens
-  
+
+  const MAX_CHARS = 8000; // Limit to ~2000 tokens (safer for Groq's 12k limit)
+
   if (text.length > MAX_CHARS) {
     // Keep first 60%, last 40% for context
     const firstPart = text.substring(0, Math.floor(MAX_CHARS * 0.6));
     const lastPart = text.substring(text.length - Math.floor(MAX_CHARS * 0.4));
     text = firstPart + '\n\n... [Middle section truncated to fit token limits] ...\n\n' + lastPart;
   }
-  
+
   return text;
 }
 
@@ -165,29 +164,29 @@ async function extractDocxText(file: File): Promise<string> {
 async function extractExcelText(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
   const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-  
+
   let text = '';
-  const MAX_CHARS = 20000; // Limit to ~5000 tokens (4 chars per token average)
-  
+  const MAX_CHARS = 8000; // Limit to ~2000 tokens (safer for Groq's 12k limit)
+
   workbook.SheetNames.forEach(sheetName => {
     if (text.length >= MAX_CHARS) return; // Stop if we've reached limit
-    
+
     const worksheet = workbook.Sheets[sheetName];
     const csvData = XLSX.utils.sheet_to_csv(worksheet);
     const lines = csvData.split('\n');
-    
+
     text += `Sheet: ${sheetName}\n`;
-    
+
     // Include header row (first line)
     if (lines.length > 0) {
       text += lines[0] + '\n';
     }
-    
+
     // Calculate how many data rows we can include
     const remainingChars = MAX_CHARS - text.length;
     const avgLineLength = csvData.length / lines.length;
     const maxRows = Math.floor(remainingChars / avgLineLength);
-    
+
     // Include sample of data rows
     if (lines.length > 1) {
       // Get first rows, middle rows, and last rows for representative sample
@@ -195,12 +194,12 @@ async function extractExcelText(file: File): Promise<string> {
       const firstBatch = Math.floor(sampleSize / 3);
       const middleBatch = Math.floor(sampleSize / 3);
       const lastBatch = sampleSize - firstBatch - middleBatch;
-      
+
       // First rows
       for (let i = 1; i <= Math.min(firstBatch, lines.length - 1); i++) {
         text += lines[i] + '\n';
       }
-      
+
       // Middle rows
       if (lines.length > 100) {
         const middleStart = Math.floor(lines.length / 2) - Math.floor(middleBatch / 2);
@@ -209,7 +208,7 @@ async function extractExcelText(file: File): Promise<string> {
           text += lines[middleStart + i] + '\n';
         }
       }
-      
+
       // Last rows
       if (lastBatch > 0 && lines.length > firstBatch + middleBatch) {
         const lastStart = Math.max(lines.length - lastBatch, firstBatch + middleBatch + 1);
@@ -220,18 +219,18 @@ async function extractExcelText(file: File): Promise<string> {
           text += lines[i] + '\n';
         }
       }
-      
+
       text += `\n[Total rows in sheet: ${lines.length - 1}]\n`;
     }
-    
+
     text += '\n';
   });
-  
+
   // Final safety check
   if (text.length > MAX_CHARS) {
     text = text.substring(0, MAX_CHARS) + '\n\n[Data truncated to fit token limits]';
   }
-  
+
   return text;
 }
 
@@ -242,7 +241,7 @@ export async function processFileUpload(
   file: AttachedFile
 ): Promise<ProcessedDocument> {
   const { file: uploadFile, type } = file;
-  
+
   try {
     // Get current user
     const { data: { session } } = await supabase.auth.getSession();
@@ -258,7 +257,7 @@ export async function processFileUpload(
     if (type === 'image') {
       // Compress and convert to base64
       const base64Data = await compressImage(uploadFile);
-      
+
       // Also upload to Supabase Storage for persistence
       const { data: storageData, error: uploadError } = await supabase.storage
         .from('documents')
@@ -284,7 +283,7 @@ export async function processFileUpload(
 
     // For documents, extract text
     let extractedText = '';
-    
+
     if (type === 'pdf') {
       extractedText = await extractPdfText(uploadFile);
     } else if (type === 'docx') {
@@ -336,12 +335,20 @@ export function createFileMessageContent(
   }
 
   // Check if data was truncated
-  const wasTruncated = processedDoc.text?.includes('[Data truncated') || 
+  const wasTruncated = processedDoc.text?.includes('[Data truncated') ||
                        processedDoc.text?.includes('[Document truncated') ||
                        processedDoc.text?.includes('rows omitted') ||
                        processedDoc.text?.includes('Pages') && processedDoc.text?.includes('omitted');
 
   // For documents (PDF, Excel, Word), prepend the extracted text
+  // Only construct this message if it's not multimodal and there's text to send
+  if (!wasTruncated && !processedDoc.text) {
+      return {
+          content: userMessage || "I've uploaded a document. What would you like to know about it?",
+          isMultimodal: false
+      };
+  }
+
   const documentContext = `
 I've uploaded a ${processedDoc.type.toUpperCase()} file (${processedDoc.filename}).
 ${wasTruncated ? '\nNote: Large document was intelligently sampled to fit within processing limits. Key sections from beginning, middle, and end are included.\n' : ''}
