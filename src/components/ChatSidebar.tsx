@@ -114,11 +114,11 @@ export const ChatSidebar = ({
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-sidebar-border">
-        <h1 className="text-lg font-semibold mb-3">{BRAND_NAME}</h1>
+      <div className="p-3 border-b border-sidebar-border">
+        <h1 className="text-lg font-semibold mb-3 px-1">{BRAND_NAME}</h1>
         <Button
           onClick={onNewChat}
-          className="w-full justify-start gap-2 text-sm"
+          className="w-full justify-start gap-2 text-sm px-3"
           variant="default"
           data-testid="button-new-chat"
         >
@@ -196,7 +196,7 @@ export const ChatSidebar = ({
         <Button
           onClick={handleLogout}
           variant="ghost"
-          className="w-full justify-start gap-2 text-sm"
+          className="w-full justify-start gap-2 text-sm px-3"
           data-testid="button-logout"
         >
           <LogOut className="h-4 w-4" />
