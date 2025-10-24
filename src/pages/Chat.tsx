@@ -418,27 +418,7 @@ const Chat = () => {
       return;
     }
 
-    // Process file upload if present
-    let processedDocument = null;
-    let actualContent = content;
-    
-    if (file) {
-      try {
-        processedDocument = await processFileUpload(file);
-        const { content: enhancedContent } = createFileMessageContent(content, processedDocument);
-        actualContent = enhancedContent;
-      } catch (error: any) {
-        toast({
-          title: "File Processing Error",
-          description: error.message || "Failed to process the uploaded file",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-    }
-
-    // Create conversation if needed
+    // Create conversation if needed FIRST
     let conversationId = currentConversationId;
     if (!conversationId) {
       const { data, error } = await supabase
@@ -464,16 +444,39 @@ const Chat = () => {
       navigate(`/chat/${data.id}`);
     }
 
-    // Add user message to UI (display only the user's text, not the document content)
+    // Show user message IMMEDIATELY in UI (before processing)
     const userMessage: Message = {
       id: crypto.randomUUID(),
       role: "user",
-      content: content || '', // Display only user's message (may be empty for "analyze this" requests)
+      content: content || '', // Display only user's message
       created_at: new Date().toISOString(),
-      file_name: processedDocument?.filename,
-      file_type: processedDocument?.type,
+      file_name: file?.file.name,
+      file_type: file?.type,
     };
     setMessages((prev) => [...prev, userMessage]);
+
+    // Force scroll immediately
+    setTimeout(() => scrollToBottom(), 50);
+
+    // Process file upload in background (if present)
+    let processedDocument = null;
+    let actualContent = content;
+    
+    if (file) {
+      try {
+        processedDocument = await processFileUpload(file);
+        const { content: enhancedContent } = createFileMessageContent(content, processedDocument);
+        actualContent = enhancedContent;
+      } catch (error: any) {
+        toast({
+          title: "File Processing Error",
+          description: error.message || "Failed to process the uploaded file",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+    }
 
     // Save user message to database
     // Store ONLY the user's text, not the document content

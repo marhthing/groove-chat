@@ -68,168 +68,274 @@ async function compressImage(file: File): Promise<string> {
 }
 
 /**
- * Extract text from PDF with intelligent truncation
+ * Extract text from PDF with intelligent adaptive truncation
  */
 async function extractPdfText(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
   const uint8Array = new Uint8Array(arrayBuffer);
 
   const pdf = await pdfjsLib.getDocument({ data: uint8Array }).promise;
-  let text = '';
-  const MAX_CHARS = 8000; // Limit to ~2000 tokens (safer for Groq's 12k limit)
-
-  // Extract all pages first to get total count
   const totalPages = pdf.numPages;
+  const TARGET_TOKENS = 8000;
+  const MAX_CHARS = TARGET_TOKENS * 4;
 
-  // If few pages, extract all
-  if (totalPages <= 10) {
+  // First pass: try to extract all pages
+  let fullText = '';
+  const pageTexts: string[] = [];
+
+  for (let i = 1; i <= totalPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items.map((item: any) => item.str).join(' ');
+    pageTexts.push(pageText);
+    fullText += `\n--- Page ${i} ---\n${pageText}\n`;
+  }
+
+  // If it fits, return everything!
+  if (fullText.length <= MAX_CHARS) {
+    return fullText;
+  }
+
+  // Calculate compression ratio needed
+  const compressionRatio = MAX_CHARS / fullText.length;
+  let text = '';
+
+  // Light compression (>70% kept) - just trim some middle pages
+  if (compressionRatio > 0.7) {
+    const pagesToKeep = Math.floor(totalPages * compressionRatio);
+    const skipStart = Math.floor(totalPages * 0.4);
+    const skipEnd = skipStart + (totalPages - pagesToKeep);
+
     for (let i = 1; i <= totalPages; i++) {
-      if (text.length >= MAX_CHARS) break;
-
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-      const pageText = content.items.map((item: any) => item.str).join(' ');
-      text += `\n--- Page ${i} ---\n${pageText}\n`;
+      if (i >= skipStart && i < skipEnd) {
+        if (i === skipStart) {
+          text += `\n... [Pages ${skipStart} to ${skipEnd - 1} omitted] ...\n`;
+        }
+        continue;
+      }
+      text += `\n--- Page ${i} ---\n${pageTexts[i - 1]}\n`;
     }
-  } else {
-    // For large PDFs, sample pages strategically
-    const firstPages = 3;
-    const middlePages = 2;
-    const lastPages = 3;
+  }
+  // Moderate compression (40-70% kept) - strategic sampling
+  else if (compressionRatio > 0.4) {
+    const pagesToKeep = Math.floor(totalPages * compressionRatio);
+    const keepFirst = Math.floor(pagesToKeep * 0.5);
+    const keepMiddle = Math.floor(pagesToKeep * 0.2);
+    const keepLast = pagesToKeep - keepFirst - keepMiddle;
 
     // First pages
-    for (let i = 1; i <= firstPages; i++) {
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-      const pageText = content.items.map((item: any) => item.str).join(' ');
-      text += `\n--- Page ${i} ---\n${pageText}\n`;
+    for (let i = 1; i <= keepFirst; i++) {
+      text += `\n--- Page ${i} ---\n${pageTexts[i - 1]}\n`;
     }
 
     // Middle pages
-    const middleStart = Math.floor(totalPages / 2);
-    text += `\n... [Pages ${firstPages + 1} to ${middleStart - 1} omitted] ...\n`;
-    for (let i = 0; i < middlePages; i++) {
-      const pageNum = middleStart + i;
-      if (pageNum > totalPages - lastPages) break;
-
-      const page = await pdf.getPage(pageNum);
-      const content = await page.getTextContent();
-      const pageText = content.items.map((item: any) => item.str).join(' ');
-      text += `\n--- Page ${pageNum} ---\n${pageText}\n`;
+    if (keepMiddle > 0) {
+      const middleStart = Math.floor(totalPages / 2);
+      text += `\n... [Pages ${keepFirst + 1} to ${middleStart - 1} omitted] ...\n`;
+      for (let i = 0; i < keepMiddle; i++) {
+        const pageNum = middleStart + i;
+        text += `\n--- Page ${pageNum} ---\n${pageTexts[pageNum - 1]}\n`;
+      }
     }
 
     // Last pages
-    text += `\n... [Pages ${middleStart + middlePages} to ${totalPages - lastPages} omitted] ...\n`;
-    for (let i = totalPages - lastPages + 1; i <= totalPages; i++) {
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-      const pageText = content.items.map((item: any) => item.str).join(' ');
-      text += `\n--- Page ${i} ---\n${pageText}\n`;
+    const lastStart = totalPages - keepLast + 1;
+    text += `\n... [Pages ${Math.floor(totalPages / 2) + keepMiddle} to ${lastStart - 1} omitted] ...\n`;
+    for (let i = lastStart; i <= totalPages; i++) {
+      text += `\n--- Page ${i} ---\n${pageTexts[i - 1]}\n`;
     }
 
-    text = `[PDF Document: ${totalPages} pages total, showing sample pages]\n` + text;
+    text = `[PDF: ${totalPages} pages, showing ${pagesToKeep} pages]\n` + text;
   }
+  // Heavy compression (<40% kept)
+  else {
+    const keepFirst = 3;
+    const keepMiddle = 2;
+    const keepLast = 3;
 
-  // Final safety check
-  if (text.length > MAX_CHARS) {
-    text = text.substring(0, MAX_CHARS) + '\n\n[Document truncated to fit token limits]';
+    for (let i = 1; i <= keepFirst; i++) {
+      text += `\n--- Page ${i} ---\n${pageTexts[i - 1]}\n`;
+    }
+
+    text += `\n... [Significant content omitted] ...\n`;
+
+    const middleStart = Math.floor(totalPages / 2);
+    for (let i = 0; i < keepMiddle; i++) {
+      const pageNum = middleStart + i;
+      text += `\n--- Page ${pageNum} ---\n${pageTexts[pageNum - 1]}\n`;
+    }
+
+    text += `\n... [Significant content omitted] ...\n`;
+
+    for (let i = totalPages - keepLast + 1; i <= totalPages; i++) {
+      text += `\n--- Page ${i} ---\n${pageTexts[i - 1]}\n`;
+    }
+
+    text = `[PDF: ${totalPages} pages, heavily sampled to fit limits]\n` + text;
   }
 
   return text;
 }
 
 /**
- * Extract text from Word document with intelligent truncation
+ * Extract text from Word document with intelligent adaptive truncation
  */
 async function extractDocxText(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
   const result = await mammoth.extractRawText({ arrayBuffer });
   let text = result.value;
 
-  const MAX_CHARS = 8000; // Limit to ~2000 tokens (safer for Groq's 12k limit)
+  const TARGET_TOKENS = 8000;
+  const MAX_CHARS = TARGET_TOKENS * 4;
 
-  if (text.length > MAX_CHARS) {
-    // Keep first 60%, last 40% for context
-    const firstPart = text.substring(0, Math.floor(MAX_CHARS * 0.6));
-    const lastPart = text.substring(text.length - Math.floor(MAX_CHARS * 0.4));
-    text = firstPart + '\n\n... [Middle section truncated to fit token limits] ...\n\n' + lastPart;
+  // If it fits, return as-is!
+  if (text.length <= MAX_CHARS) {
+    return text;
+  }
+
+  // Calculate how much to keep
+  const compressionRatio = MAX_CHARS / text.length;
+
+  // Light compression (>85% kept) - just trim the end
+  if (compressionRatio > 0.85) {
+    const charsToKeep = Math.floor(text.length * compressionRatio);
+    text = text.substring(0, charsToKeep) + '\n\n... [End of document truncated] ...';
+  }
+  // Moderate compression (60-85% kept)
+  else if (compressionRatio > 0.6) {
+    const firstPart = text.substring(0, Math.floor(MAX_CHARS * 0.7));
+    const lastPart = text.substring(text.length - Math.floor(MAX_CHARS * 0.3));
+    text = firstPart + '\n\n... [Middle section omitted] ...\n\n' + lastPart;
+  }
+  // Heavy compression (<60% kept)
+  else {
+    const firstPart = text.substring(0, Math.floor(MAX_CHARS * 0.5));
+    const lastPart = text.substring(text.length - Math.floor(MAX_CHARS * 0.5));
+    text = firstPart + '\n\n... [Significant middle content omitted to fit limits] ...\n\n' + lastPart;
   }
 
   return text;
 }
 
 /**
- * Extract text from Excel with intelligent truncation
+ * Extract text from Excel with intelligent adaptive truncation
  */
 async function extractExcelText(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
   const workbook = XLSX.read(arrayBuffer, { type: 'array' });
 
   let text = '';
-  const MAX_CHARS = 8000; // Limit to ~2000 tokens (safer for Groq's 12k limit)
+  const TARGET_TOKENS = 8000; // ~32,000 characters for safety (leaving room for other context)
+  const MAX_CHARS = TARGET_TOKENS * 4; // ~4 chars per token average
+
+  // First pass: extract everything
+  let fullText = '';
+  workbook.SheetNames.forEach(sheetName => {
+    const worksheet = workbook.Sheets[sheetName];
+    const csvData = XLSX.utils.sheet_to_csv(worksheet);
+    fullText += `Sheet: ${sheetName}\n${csvData}\n\n`;
+  });
+
+  // If it fits comfortably, return as-is (no optimization needed!)
+  if (fullText.length <= MAX_CHARS) {
+    return fullText;
+  }
+
+  // Smart adaptive optimization: Calculate how much we need to reduce
+  const reductionNeeded = fullText.length - MAX_CHARS;
+  const compressionRatio = MAX_CHARS / fullText.length;
 
   workbook.SheetNames.forEach(sheetName => {
-    if (text.length >= MAX_CHARS) return; // Stop if we've reached limit
-
     const worksheet = workbook.Sheets[sheetName];
     const csvData = XLSX.utils.sheet_to_csv(worksheet);
     const lines = csvData.split('\n');
 
     text += `Sheet: ${sheetName}\n`;
 
-    // Include header row (first line)
+    // Include header row
     if (lines.length > 0) {
       text += lines[0] + '\n';
     }
 
-    // Calculate how many data rows we can include
-    const remainingChars = MAX_CHARS - text.length;
-    const avgLineLength = csvData.length / lines.length;
-    const maxRows = Math.floor(remainingChars / avgLineLength);
+    if (lines.length <= 1) {
+      text += '\n';
+      return;
+    }
 
-    // Include sample of data rows
-    if (lines.length > 1) {
-      // Get first rows, middle rows, and last rows for representative sample
-      const sampleSize = Math.min(maxRows, lines.length - 1);
-      const firstBatch = Math.floor(sampleSize / 3);
-      const middleBatch = Math.floor(sampleSize / 3);
-      const lastBatch = sampleSize - firstBatch - middleBatch;
+    // Calculate how many rows we can keep for this sheet
+    const dataRows = lines.length - 1;
+    const targetRows = Math.floor(dataRows * compressionRatio);
+
+    // If compression is minimal (>85% kept), just trim the tail slightly
+    if (compressionRatio > 0.85) {
+      const rowsToKeep = Math.max(targetRows, Math.floor(dataRows * 0.85));
+      for (let i = 1; i <= rowsToKeep; i++) {
+        text += lines[i] + '\n';
+      }
+      if (rowsToKeep < dataRows) {
+        text += `... [${dataRows - rowsToKeep} rows omitted from end] ...\n`;
+      }
+    }
+    // If moderate compression needed (50-85% kept), smart sampling
+    else if (compressionRatio > 0.5) {
+      const keepFirst = Math.floor(targetRows * 0.5);
+      const keepLast = Math.floor(targetRows * 0.3);
+      const keepMiddle = targetRows - keepFirst - keepLast;
 
       // First rows
-      for (let i = 1; i <= Math.min(firstBatch, lines.length - 1); i++) {
+      for (let i = 1; i <= keepFirst; i++) {
         text += lines[i] + '\n';
       }
 
-      // Middle rows
-      if (lines.length > 100) {
-        const middleStart = Math.floor(lines.length / 2) - Math.floor(middleBatch / 2);
-        text += `... [${middleStart - firstBatch - 1} rows omitted] ...\n`;
-        for (let i = 0; i < middleBatch && middleStart + i < lines.length; i++) {
+      // Middle sample
+      const middleStart = Math.floor(dataRows / 2) - Math.floor(keepMiddle / 2);
+      if (keepMiddle > 0 && dataRows > keepFirst + keepLast + 20) {
+        text += `... [${middleStart - keepFirst - 1} rows omitted] ...\n`;
+        for (let i = 0; i < keepMiddle; i++) {
           text += lines[middleStart + i] + '\n';
         }
       }
 
       // Last rows
-      if (lastBatch > 0 && lines.length > firstBatch + middleBatch) {
-        const lastStart = Math.max(lines.length - lastBatch, firstBatch + middleBatch + 1);
-        if (lastStart > firstBatch + middleBatch) {
-          text += `... [${lastStart - firstBatch - middleBatch - 1} rows omitted] ...\n`;
+      if (keepLast > 0) {
+        const lastStart = dataRows - keepLast + 1;
+        if (lastStart > keepFirst + keepMiddle) {
+          text += `... [${lastStart - keepFirst - keepMiddle - 1} rows omitted] ...\n`;
         }
-        for (let i = lastStart; i < lines.length; i++) {
+        for (let i = lastStart; i <= dataRows; i++) {
           text += lines[i] + '\n';
         }
       }
+    }
+    // Heavy compression needed (<50% kept)
+    else {
+      const keepFirst = Math.floor(targetRows * 0.4);
+      const keepMiddle = Math.floor(targetRows * 0.2);
+      const keepLast = Math.floor(targetRows * 0.4);
 
-      text += `\n[Total rows in sheet: ${lines.length - 1}]\n`;
+      // First rows
+      for (let i = 1; i <= keepFirst; i++) {
+        text += lines[i] + '\n';
+      }
+      text += `... [significant data omitted] ...\n`;
+
+      // Middle sample
+      if (keepMiddle > 0) {
+        const middleStart = Math.floor(dataRows / 2);
+        for (let i = 0; i < keepMiddle; i++) {
+          text += lines[middleStart + i] + '\n';
+        }
+        text += `... [significant data omitted] ...\n`;
+      }
+
+      // Last rows
+      for (let i = dataRows - keepLast + 1; i <= dataRows; i++) {
+        text += lines[i] + '\n';
+      }
     }
 
-    text += '\n';
+    text += `\n[Total rows in sheet: ${dataRows}, Rows included: ${targetRows}]\n\n`;
   });
-
-  // Final safety check
-  if (text.length > MAX_CHARS) {
-    text = text.substring(0, MAX_CHARS) + '\n\n[Data truncated to fit token limits]';
-  }
 
   return text;
 }
