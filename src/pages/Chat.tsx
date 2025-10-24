@@ -168,6 +168,22 @@ const Chat = () => {
   };
 
   const loadMessages = async (conversationId: string) => {
+    // First, fetch the conversation to get the model_type
+    const { data: convData } = await supabase
+      .from("conversations")
+      .select("model_type")
+      .eq("id", conversationId)
+      .single();
+
+    // Set the model type from the conversation
+    if (convData?.model_type) {
+      setSelectedModel(convData.model_type);
+    } else {
+      // Default to 'chat' if no model_type is found (for older conversations)
+      setSelectedModel("chat");
+    }
+
+    // Then load messages
     const { data, error } = await supabase
       .from("messages")
       .select("*")
@@ -191,15 +207,6 @@ const Chat = () => {
       
       // Scroll to bottom after loading messages
       scrollToBottom();
-
-      // Load the model type for the selected conversation
-      const conversation = conversations.find(c => c.id === conversationId);
-      if (conversation && conversation.model_type) {
-        setSelectedModel(conversation.model_type);
-      } else {
-        // Default to 'chat' if no model_type is found (for older conversations)
-        setSelectedModel("chat");
-      }
     }
   };
 
