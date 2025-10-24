@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { Plus, MessageSquare, LogOut, Menu, MoreVertical, Trash2, Edit2 } from "lucide-react";
+import { Plus, MessageSquare, LogOut, MoreVertical, Trash2, Edit2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
@@ -33,7 +34,7 @@ import {
 } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { Sheet, SheetTrigger, SheetContent } from "./ui/sheet";
+import { Sheet, SheetContent } from "./ui/sheet";
 
 interface Conversation {
   id: string;
@@ -113,12 +114,12 @@ export const ChatSidebar = ({
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-sidebar-border">
-        <h1 className="text-lg font-semibold mb-3">{BRAND_NAME}</h1>
+    <div className="flex flex-col h-full bg-sidebar">
+      <div className="p-4">
+        <h1 className="text-xl font-semibold mb-4">{BRAND_NAME}</h1>
         <Button
           onClick={onNewChat}
-          className="w-full justify-start gap-2 text-sm"
+          className="w-full justify-start gap-2"
           variant="default"
           data-testid="button-new-chat"
         >
@@ -127,13 +128,15 @@ export const ChatSidebar = ({
         </Button>
       </div>
 
-      <ScrollArea className="flex-1">
-        <div className="space-y-1 p-4">
+      <Separator />
+
+      <ScrollArea className="flex-1 px-3">
+        <div className="space-y-2 py-4">
           {conversations.map((conv) => (
             <div
               key={conv.id}
               className={`group relative rounded-lg transition-colors ${
-                currentConversationId === conv.id ? "bg-sidebar-accent" : ""
+                currentConversationId === conv.id ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
               }`}
             >
               <button
@@ -141,29 +144,29 @@ export const ChatSidebar = ({
                   onSelectConversation(conv.id);
                   if (window.innerWidth < 768) onToggle();
                 }}
-                className="w-full text-left py-2 pl-3 pr-8 rounded-lg transition-colors flex items-start gap-2 hover:bg-sidebar-accent"
+                className="w-full text-left p-3 rounded-lg flex items-start gap-3"
                 data-testid={`button-conversation-${conv.id}`}
               >
-                <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
+                <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                <div className="flex-1 min-w-0 pr-8">
                   <p className="text-sm font-medium truncate">{conv.title}</p>
-                  <p className="text-xs text-muted-foreground truncate">
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     {new Date(conv.updated_at).toLocaleDateString()}
                   </p>
                 </div>
               </button>
 
-              <div className="absolute right-0.5 top-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7"
+                      className="h-8 w-8"
                       onClick={(e) => e.stopPropagation()}
                       data-testid={`button-options-${conv.id}`}
                     >
-                      <MoreVertical className="h-3.5 w-3.5" />
+                      <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -196,7 +199,7 @@ export const ChatSidebar = ({
         <Button
           onClick={handleLogout}
           variant="ghost"
-          className="w-full justify-start gap-2 text-sm"
+          className="w-full justify-start gap-2"
           data-testid="button-logout"
         >
           <LogOut className="h-4 w-4" />
@@ -210,18 +213,15 @@ export const ChatSidebar = ({
     <>
       {/* Mobile Sheet */}
       <Sheet open={isOpen} onOpenChange={onToggle}>
-        <SheetContent side="left" className="p-0">
+        <SheetContent side="left" className="p-0 w-72 bg-sidebar">
           {sidebarContent}
         </SheetContent>
       </Sheet>
 
-      {/* Desktop Sidebar */}
-      <div className="hidden md:flex md:w-56 lg:w-64 border-r border-sidebar-border bg-sidebar flex-shrink-0">
-        {sidebarContent}
-      </div>
+      {/* Desktop Sidebar - rendered in Chat.tsx */}
+      {sidebarContent}
 
-      {/* Dialogs */}
-            {/* Delete Confirmation Dialog */}
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

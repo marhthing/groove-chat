@@ -348,7 +348,7 @@ const Chat = () => {
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex md:w-64 lg:w-72 border-r border-sidebar-border bg-sidebar flex-shrink-0">
+      <div className="hidden md:block md:w-72 border-r border-sidebar-border flex-shrink-0">
         {sidebarContent}
       </div>
 
