@@ -139,19 +139,19 @@ export const ChatSidebar = ({
                   onSelectConversation(conv.id);
                   if (window.innerWidth < 768) onToggle();
                 }}
-                className="w-full text-left p-2 pr-10 rounded-lg transition-colors flex items-start gap-2 hover:bg-sidebar-accent"
+                className="w-full text-left py-2 pl-2 pr-8 rounded-lg transition-colors flex items-start gap-2 hover:bg-sidebar-accent"
                 data-testid={`button-conversation-${conv.id}`}
               >
                 <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                <div className="flex-1 min-w-0 overflow-hidden">
-                  <p className="text-sm font-medium truncate pr-1">{conv.title}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{conv.title}</p>
                   <p className="text-xs text-muted-foreground truncate">
                     {new Date(conv.updated_at).toLocaleDateString()}
                   </p>
                 </div>
               </button>
 
-              <div className="absolute right-1 top-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute right-0.5 top-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
