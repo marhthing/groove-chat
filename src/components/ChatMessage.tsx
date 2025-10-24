@@ -11,7 +11,13 @@ import "katex/dist/katex.min.css";
 // Configure marked with KaTeX extension and GFM (tables, strikethrough, etc.)
 marked.use(markedKatex({
   throwOnError: false,
-  output: 'html'
+  output: 'html',
+  delimiters: [
+    { left: "$$", right: "$$", display: true },
+    { left: "$", right: "$", display: false },
+    { left: "\\[", right: "\\]", display: true },
+    { left: "\\(", right: "\\)", display: false }
+  ]
 }));
 
 marked.setOptions({
