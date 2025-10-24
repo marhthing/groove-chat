@@ -506,7 +506,7 @@ const Chat = () => {
       </div>
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        {/* Header with mobile menu and share button */}
+        {/* Header - Mobile */}
         <div className="flex items-center justify-between p-3 border-b border-border md:hidden">
           <Button
             variant="ghost"
@@ -516,6 +516,11 @@ const Chat = () => {
           >
             <Menu className="h-5 w-5" />
           </Button>
+          <div className="flex items-center gap-2">
+            <h2 className="font-semibold text-sm">
+              {selectedModel === "image-generator" ? "Image Generator" : BRAND_NAME}
+            </h2>
+          </div>
           {currentConversationId && messages.length > 0 && (
             <Button
               variant="ghost"
@@ -528,18 +533,25 @@ const Chat = () => {
           )}
         </div>
 
-        {/* Desktop share button - absolute positioned */}
-        {currentConversationId && messages.length > 0 && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hidden md:block absolute top-3 right-3 z-10"
-            onClick={shareConversation}
-            title="Share conversation"
-          >
-            <Share2 className="h-5 w-5" />
-          </Button>
-        )}
+        {/* Header - Desktop */}
+        <div className="hidden md:flex items-center justify-center p-3 border-b border-border">
+          <div className="flex items-center gap-2">
+            <h2 className="font-semibold text-base">
+              {selectedModel === "image-generator" ? "Image Generator" : BRAND_NAME}
+            </h2>
+          </div>
+          {currentConversationId && messages.length > 0 && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-3"
+              onClick={shareConversation}
+              title="Share conversation"
+            >
+              <Share2 className="h-5 w-5" />
+            </Button>
+          )}
+        </div>
 
         <div className="flex-1 overflow-hidden">
           <ScrollArea className="h-full" ref={scrollRef}>
