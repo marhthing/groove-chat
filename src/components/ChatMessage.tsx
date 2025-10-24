@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { marked } from "marked";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
@@ -66,6 +67,17 @@ export const ChatMessage = ({ role, content, fileName, fileType }: ChatMessagePr
           alt="Generated" 
           className="rounded-lg max-w-full h-auto"
           style={{ maxHeight: '512px' }}
+        />
+      );
+    }
+    
+    // Parse markdown for assistant messages
+    if (!isUser) {
+      const htmlContent = marked.parse(text, { async: false }) as string;
+      return (
+        <div 
+          className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none"
+          dangerouslySetInnerHTML={{ __html: htmlContent }}
         />
       );
     }
