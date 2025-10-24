@@ -330,8 +330,12 @@ const Chat = () => {
         role: "assistant",
         content: `![Generated Image](${imageUrl})`,
         created_at: new Date().toISOString(),
+        image_url: imageUrl,
       };
       setMessages((prev) => [...prev, assistantMessage]);
+
+      // Force scroll after adding image
+      setTimeout(() => scrollToBottom(), 100);
 
       // Save assistant message with image_url to database
       await supabase.from("messages").insert({
@@ -339,11 +343,6 @@ const Chat = () => {
         role: "assistant",
         content: "Generated image",
         image_url: imageUrl,
-      });
-
-      toast({
-        title: "Success",
-        description: "Image generated successfully!",
       });
     } catch (error: any) {
       toast({
