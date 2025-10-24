@@ -528,9 +528,10 @@ const Chat = () => {
         content: actualContent, // Enhanced content with document text
       });
 
-      // Optimize context if conversation is getting too long (keep last 20 messages)
-      const optimizedMessages = messagesForAI.length > 20 
-        ? messagesForAI.slice(-20) 
+      // Optimize context if conversation is getting too long (keep last 10 messages)
+      // Reduced from 20 to 10 to ensure we stay within token limits with documents
+      const optimizedMessages = messagesForAI.length > 10 
+        ? messagesForAI.slice(-10) 
         : messagesForAI;
 
       const apiKey = import.meta.env.VITE_GROQ_API_KEY;

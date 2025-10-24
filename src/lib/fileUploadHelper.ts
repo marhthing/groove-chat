@@ -76,7 +76,8 @@ async function extractPdfText(file: File): Promise<string> {
 
   const pdf = await pdfjsLib.getDocument({ data: uint8Array }).promise;
   const totalPages = pdf.numPages;
-  const TARGET_TOKENS = 8000;
+  // Reduced to 4000 tokens to leave room for system prompt + conversation history
+  const TARGET_TOKENS = 4000;
   const MAX_CHARS = TARGET_TOKENS * 4;
 
   // First pass: try to extract all pages
@@ -185,7 +186,8 @@ async function extractDocxText(file: File): Promise<string> {
   const result = await mammoth.extractRawText({ arrayBuffer });
   let text = result.value;
 
-  const TARGET_TOKENS = 8000;
+  // Reduced to 4000 tokens to leave room for system prompt + conversation history
+  const TARGET_TOKENS = 4000;
   const MAX_CHARS = TARGET_TOKENS * 4;
 
   // If it fits, return as-is!
@@ -225,7 +227,8 @@ async function extractExcelText(file: File): Promise<string> {
   const workbook = XLSX.read(arrayBuffer, { type: 'array' });
 
   let text = '';
-  const TARGET_TOKENS = 8000; // ~32,000 characters for safety (leaving room for other context)
+  // Reduced to 4000 tokens to leave room for system prompt + conversation history
+  const TARGET_TOKENS = 4000;
   const MAX_CHARS = TARGET_TOKENS * 4; // ~4 chars per token average
 
   // First pass: extract everything
@@ -347,7 +350,8 @@ async function extractCsvText(file: File): Promise<string> {
   const text = await file.text();
   const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
   
-  const TARGET_TOKENS = 8000;
+  // Reduced to 4000 tokens to leave room for system prompt + conversation history
+  const TARGET_TOKENS = 4000;
   const MAX_CHARS = TARGET_TOKENS * 4;
   
   // If CSV fits within limits, return as-is
