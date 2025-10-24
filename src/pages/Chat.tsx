@@ -280,6 +280,17 @@ const Chat = () => {
       };
       setMessages((prev) => [...prev, userMessage]);
 
+      // Force scroll after adding user message
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (scrollRef.current) {
+              scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+            }
+          });
+        });
+      }, 50);
+
       // Save user message to database
       await supabase.from("messages").insert({
         conversation_id: conversationId,
