@@ -297,7 +297,7 @@ const Chat = () => {
   }
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background overflow-hidden">
       <ChatSidebar
         conversations={conversations}
         currentConversationId={currentConversationId}
@@ -307,20 +307,20 @@ const Chat = () => {
         onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
       />
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         <div className="flex-1 overflow-hidden">
           <ScrollArea className="h-full" ref={scrollRef}>
             {messages.length === 0 ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center space-y-4 p-8">
-                  <h2 className="text-2xl font-semibold">Start a conversation</h2>
-                  <p className="text-muted-foreground">
+              <div className="flex items-center justify-center h-full px-4">
+                <div className="text-center space-y-3 md:space-y-4 p-4 md:p-8 max-w-md">
+                  <h2 className="text-xl md:text-2xl font-semibold">Start a conversation</h2>
+                  <p className="text-sm md:text-base text-muted-foreground">
                     Send a message to begin chatting with the AI assistant
                   </p>
                 </div>
               </div>
             ) : (
-              <div className="max-w-4xl mx-auto">
+              <div className="w-full">
                 {messages.map((message) => (
                   <ChatMessage
                     key={message.id}
