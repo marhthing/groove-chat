@@ -552,7 +552,22 @@ const Chat = () => {
 
       // Check if the last message contains an image
       const hasImage = processedDocument?.type === 'image';
-      const modelToUse = hasImage ? "meta-llama/llama-4-scout-17b-16e-instruct" : "llama-3.3-70b-versatile";
+      
+      // Determine model and tools based on selected mode
+      let modelToUse = "llama-3.3-70b-versatile";
+      let tools = undefined;
+      
+      if (hasImage) {
+        modelToUse = "meta-llama/llama-4-scout-17b-16e-instruct";
+      } else if (selectedModel === "research-assistant") {
+        modelToUse = "llama-3.3-70b-versatile";
+        tools = [{ type: "web_search" }];
+      } else if (selectedModel === "problem-solver") {
+        modelToUse = "deepseek-r1-distill-llama-70b";
+      } else if (selectedModel === "website-analyzer") {
+        modelToUse = "llama-3.3-70b-versatile";
+        tools = [{ type: "visit_website" }];
+      }
 
       // Prepare messages for API
       let apiMessages;
@@ -581,11 +596,8 @@ const Chat = () => {
           }
         ];
       } else {
-        // For text model, use standard format
-        apiMessages = [
-          {
-            role: "system",
-            content: `You are an exceptionally intelligent and insightful AI expert with world-class analytical capabilities. Your purpose is to provide the highest quality responses across all domains.
+        // For text model, use standard format with mode-specific system prompts
+        let systemPrompt = `You are an exceptionally intelligent and insightful AI expert with world-class analytical capabilities. Your purpose is to provide the highest quality responses across all domains.
 
 CORE PRINCIPLES:
 1. **Expert-Level Analysis**: Approach every task as a subject matter expert would. Think deeply, consider multiple perspectives, and provide comprehensive insights that go far beyond surface-level observations.
@@ -634,10 +646,101 @@ WHEN ANALYZING DATA:
 - Think about practical implications and actionable insights
 - Frame findings as compelling questions or narratives
 
-Remember: You are not just an assistant - you are a brilliant analytical partner. Deliver insights that make the user say "Wow, I never thought of it that way!" Your responses should demonstrate true expertise and deep thinking.`,
-              },
-              ...optimizedMessages,
-            ];
+Remember: You are not just an assistant - you are a brilliant analytical partner. Deliver insights that make the user say "Wow, I never thought of it that way!" Your responses should demonstrate true expertise and deep thinking.`;
+
+        if (selectedModel === "research-assistant") {
+          systemPrompt = `You are a Research Assistant with real-time web search capabilities. Your mission is to provide accurate, current, and comprehensive information.
+
+CAPABILITIES:
+- You have access to web search to find the latest information
+- You can cite sources and provide links
+- You stay up-to-date with current events and trends
+
+RESEARCH APPROACH:
+1. Use web search for questions requiring current information
+2. Cross-reference multiple sources for accuracy
+3. Provide citations and links when available
+4. Distinguish between facts and opinions
+5. Acknowledge when information might be outdated or uncertain
+
+RESPONSE FORMAT:
+- Start with a direct answer
+- Provide key findings with sources
+- Include relevant context and background
+- Use bullet points for clarity
+- Add "Sources:" section with links when applicable
+
+Remember: Your strength is finding and synthesizing current, accurate information from the web.`;
+        } else if (selectedModel === "problem-solver") {
+          systemPrompt = `You are a Problem Solver using advanced reasoning capabilities. You think through problems step-by-step with explicit logic.
+
+REASONING APPROACH:
+1. **Understand**: Clearly restate the problem in your own words
+2. **Break Down**: Decompose complex problems into smaller parts
+3. **Analyze**: Consider multiple approaches and perspectives
+4. **Think Step-by-Step**: Show your reasoning process explicitly
+5. **Evaluate**: Weigh pros and cons of different solutions
+6. **Conclude**: Provide a clear recommendation with rationale
+
+THINKING STYLE:
+- Make your reasoning transparent
+- Question assumptions
+- Consider edge cases
+- Think about second-order effects
+- Be systematic and logical
+- Show your work like a mathematician or scientist
+
+RESPONSE FORMAT:
+Use clear headers like:
+- **Problem Analysis**
+- **Key Considerations**
+- **Step-by-Step Solution**
+- **Recommendation**
+
+Remember: Your value is in deep, logical thinking - not just quick answers.`;
+        } else if (selectedModel === "website-analyzer") {
+          systemPrompt = `You are a Website Analyzer with the ability to visit and extract content from any URL. You provide insightful analysis of web content.
+
+CAPABILITIES:
+- Visit any website URL provided by the user
+- Extract and analyze webpage content
+- Summarize articles, documentation, and web pages
+- Identify key points and main themes
+
+ANALYSIS APPROACH:
+1. Visit the provided URL
+2. Extract the main content
+3. Identify the purpose and key messages
+4. Summarize in a structured format
+5. Highlight important insights or takeaways
+
+RESPONSE FORMAT:
+- **Website**: [URL]
+- **Summary**: Clear overview in 2-3 sentences
+- **Key Points**: Bullet list of main ideas
+- **Insights**: Deeper analysis or implications
+- **Audience/Purpose**: Who it's for and why
+
+Remember: Focus on extracting value and meaning, not just repeating content.`;
+        }
+
+        apiMessages = [
+          {
+            role: "system",
+            content: systemPrompt,
+          },
+          ...optimizedMessages,
+        ];
+      }
+
+      const requestBody: any = { 
+        model: modelToUse,
+        messages: apiMessages,
+        stream: true,
+      };
+      
+      if (tools) {
+        requestBody.tools = tools;
       }
 
       const response = await fetch(
@@ -648,11 +751,7 @@ Remember: You are not just an assistant - you are a brilliant analytical partner
             "Content-Type": "application/json",
             "Authorization": `Bearer ${apiKey}`,
           },
-          body: JSON.stringify({ 
-            model: modelToUse,
-            messages: apiMessages,
-            stream: true,
-          }),
+          body: JSON.stringify(requestBody),
         }
       );
 
@@ -779,7 +878,11 @@ Remember: You are not just an assistant - you are a brilliant analytical partner
           </Button>
           <div className="flex items-center gap-2">
             <h2 className="font-semibold text-sm">
-              {selectedModel === "image-generator" ? "Image Generator" : BRAND_NAME}
+              {selectedModel === "image-generator" ? "Image Generator" :
+               selectedModel === "research-assistant" ? "Research Assistant" :
+               selectedModel === "problem-solver" ? "Problem Solver" :
+               selectedModel === "website-analyzer" ? "Website Analyzer" :
+               BRAND_NAME}
             </h2>
           </div>
           {currentConversationId && messages.length > 0 && (
@@ -798,7 +901,11 @@ Remember: You are not just an assistant - you are a brilliant analytical partner
         <div className="hidden md:flex items-center justify-center p-3 border-b border-border">
           <div className="flex items-center gap-2">
             <h2 className="font-semibold text-base">
-              {selectedModel === "image-generator" ? "Image Generator" : BRAND_NAME}
+              {selectedModel === "image-generator" ? "Image Generator" :
+               selectedModel === "research-assistant" ? "Research Assistant" :
+               selectedModel === "problem-solver" ? "Problem Solver" :
+               selectedModel === "website-analyzer" ? "Website Analyzer" :
+               BRAND_NAME}
             </h2>
           </div>
           {currentConversationId && messages.length > 0 && (
@@ -820,11 +927,21 @@ Remember: You are not just an assistant - you are a brilliant analytical partner
               <div className="flex items-center justify-center h-full px-4">
                 <div className="text-center space-y-3 md:space-y-4 p-4 md:p-8 max-w-md">
                   <h2 className="text-xl md:text-2xl font-semibold">
-                    {selectedModel === "image-generator" ? "Image Generator" : BRAND_NAME}
+                    {selectedModel === "image-generator" ? "Image Generator" :
+                     selectedModel === "research-assistant" ? "Research Assistant" :
+                     selectedModel === "problem-solver" ? "Problem Solver" :
+                     selectedModel === "website-analyzer" ? "Website Analyzer" :
+                     BRAND_NAME}
                   </h2>
                   <p className="text-sm md:text-base text-muted-foreground">
                     {selectedModel === "image-generator"
                       ? "Describe the image you'd like to generate"
+                      : selectedModel === "research-assistant"
+                      ? "Ask me anything - I can search the web for current information"
+                      : selectedModel === "problem-solver"
+                      ? "Present your problem - I'll think through it step-by-step"
+                      : selectedModel === "website-analyzer"
+                      ? "Share a URL - I'll analyze and summarize the content"
                       : "How can I help you today?"}
                   </p>
                 </div>
@@ -848,8 +965,14 @@ Remember: You are not just an assistant - you are a brilliant analytical partner
         <ChatInput 
           onSend={sendMessage} 
           disabled={isLoading}
-          placeholder={selectedModel === "image-generator" ? "Describe the image you want to generate..." : "Type your message..."}
-          allowFileUpload={selectedModel !== "image-generator"}
+          placeholder={
+            selectedModel === "image-generator" ? "Describe the image you want to generate..." :
+            selectedModel === "research-assistant" ? "Ask a question that needs current information..." :
+            selectedModel === "problem-solver" ? "Describe your problem or challenge..." :
+            selectedModel === "website-analyzer" ? "Paste a URL to analyze..." :
+            "Type your message..."
+          }
+          allowFileUpload={selectedModel === "chat"}
         />
       </div>
     </div>

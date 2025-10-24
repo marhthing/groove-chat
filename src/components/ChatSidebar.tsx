@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Plus, MessageSquare, LogOut, MoreVertical, Trash2, Edit2, Settings, ImageIcon, Sparkles } from "lucide-react";
+import { Plus, MessageSquare, LogOut, MoreVertical, Trash2, Edit2, Settings, ImageIcon, Sparkles, Search, Brain, Globe } from "lucide-react";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
@@ -164,6 +164,42 @@ export const ChatSidebar = ({
             >
               <ImageIcon className="h-4 w-4 text-purple-500 flex-shrink-0" />
               <span className="text-sm font-medium">Image Generator</span>
+            </button>
+            <button
+              onClick={() => {
+                onSelectModel("research-assistant");
+                if (window.innerWidth < 768) onToggle();
+              }}
+              className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
+                selectedModel === "research-assistant" ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
+              }`}
+            >
+              <Search className="h-4 w-4 text-green-500 flex-shrink-0" />
+              <span className="text-sm font-medium">Research Assistant</span>
+            </button>
+            <button
+              onClick={() => {
+                onSelectModel("problem-solver");
+                if (window.innerWidth < 768) onToggle();
+              }}
+              className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
+                selectedModel === "problem-solver" ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
+              }`}
+            >
+              <Brain className="h-4 w-4 text-orange-500 flex-shrink-0" />
+              <span className="text-sm font-medium">Problem Solver</span>
+            </button>
+            <button
+              onClick={() => {
+                onSelectModel("website-analyzer");
+                if (window.innerWidth < 768) onToggle();
+              }}
+              className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
+                selectedModel === "website-analyzer" ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
+              }`}
+            >
+              <Globe className="h-4 w-4 text-cyan-500 flex-shrink-0" />
+              <span className="text-sm font-medium">Website Analyzer</span>
             </button>
           </div>
         </div>
