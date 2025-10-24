@@ -116,25 +116,10 @@ const Chat = () => {
   };
 
   const createNewConversation = async () => {
-    if (!session) return;
-
-    const { data, error } = await supabase
-      .from("conversations")
-      .insert({ user_id: session.user.id })
-      .select()
-      .single();
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create conversation",
-        variant: "destructive",
-      });
-    } else {
-      setCurrentConversationId(data.id);
-      setMessages([]);
-      await loadConversations();
-    }
+    // Just clear the current conversation and messages
+    // Don't create in database until user sends first message
+    setCurrentConversationId(null);
+    setMessages([]);
   };
 
   const updateConversationTitle = async (conversationId: string, firstMessage: string) => {
@@ -217,7 +202,6 @@ const Chat = () => {
       }
       conversationId = data.id;
       setCurrentConversationId(data.id);
-      await loadConversations();
     }
 
     // Add user message to UI
@@ -249,6 +233,8 @@ const Chat = () => {
     // Update conversation title if this is the first message
     if (messages.length === 0) {
       await updateConversationTitle(conversationId, content);
+      // Reload conversations to show the new conversation in sidebar
+      await loadConversations();
     }
 
     // Call AI chat function
