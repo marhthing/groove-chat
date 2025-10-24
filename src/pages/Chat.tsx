@@ -6,7 +6,7 @@ import { ChatMessage } from "@/components/ChatMessage";
 import { ChatInput } from "@/components/ChatInput";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { Menu, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Session } from "@supabase/supabase-js";
 import { BRAND_NAME } from "@/lib/constants";
@@ -16,12 +16,14 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   created_at: string;
+  image_url?: string;
 }
 
 interface Conversation {
   id: string;
   title: string;
   updated_at: string;
+  shareable_id?: string;
 }
 
 const Chat = () => {
@@ -81,7 +83,7 @@ const Chat = () => {
   const loadConversations = async () => {
     const { data, error } = await supabase
       .from("conversations")
-      .select("*")
+      .select("id, title, updated_at, shareable_id")
       .order("updated_at", { ascending: false });
 
     if (error) {
@@ -92,6 +94,42 @@ const Chat = () => {
       });
     } else {
       setConversations(data || []);
+    }
+  };
+
+  const shareConversation = async () => {
+    if (!currentConversationId) {
+      toast({
+        title: "Error",
+        description: "No conversation to share",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const conversation = conversations.find(c => c.id === currentConversationId);
+    if (!conversation?.shareable_id) {
+      toast({
+        title: "Error",
+        description: "Shareable link not available",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const shareUrl = `${window.location.origin}/share/${conversation.shareable_id}`;
+    
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast({
+        title: "Success",
+        description: "Share link copied to clipboard!",
+      });
+    } catch (error) {
+      toast({
+        title: "Share Link",
+        description: shareUrl,
+      });
     }
   };
 
@@ -111,7 +149,8 @@ const Chat = () => {
     } else {
       setMessages((data || []).map(msg => ({
         ...msg,
-        role: msg.role as "user" | "assistant"
+        role: msg.role as "user" | "assistant",
+        content: msg.image_url ? `![Generated Image](${msg.image_url})` : msg.content,
       })));
     }
   };
@@ -179,7 +218,32 @@ const Chat = () => {
   };
 
   const handleImageGeneration = async (prompt: string) => {
+    if (!session) return;
+
     try {
+      // Create conversation if needed
+      let conversationId = currentConversationId;
+      if (!conversationId) {
+        const { data, error } = await supabase
+          .from("conversations")
+          .insert({ user_id: session.user.id, title: `Image: ${prompt.slice(0, 40)}...` })
+          .select()
+          .single();
+
+        if (error) {
+          toast({
+            title: "Error",
+            description: "Failed to create conversation",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+        conversationId = data.id;
+        setCurrentConversationId(data.id);
+        await loadConversations();
+      }
+
       // Add user message to UI
       const userMessage: Message = {
         id: crypto.randomUUID(),
@@ -189,10 +253,17 @@ const Chat = () => {
       };
       setMessages((prev) => [...prev, userMessage]);
 
+      // Save user message to database
+      await supabase.from("messages").insert({
+        conversation_id: conversationId,
+        role: "user",
+        content: prompt,
+      });
+
       // Generate image using Pollinations.ai
       const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true`;
 
-      // Add assistant message with image
+      // Add assistant message with image to UI
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
         role: "assistant",
@@ -200,6 +271,14 @@ const Chat = () => {
         created_at: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, assistantMessage]);
+
+      // Save assistant message with image_url to database
+      await supabase.from("messages").insert({
+        conversation_id: conversationId,
+        role: "assistant",
+        content: "Generated image",
+        image_url: imageUrl,
+      });
 
       toast({
         title: "Success",
@@ -427,16 +506,40 @@ const Chat = () => {
       </div>
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        {/* Mobile menu button - absolute positioned */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden absolute top-3 left-3 z-10"
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          data-testid="button-menu"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
+        {/* Header with mobile menu and share button */}
+        <div className="flex items-center justify-between p-3 border-b border-border md:hidden">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            data-testid="button-menu"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          {currentConversationId && messages.length > 0 && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={shareConversation}
+              title="Share conversation"
+            >
+              <Share2 className="h-5 w-5" />
+            </Button>
+          )}
+        </div>
+
+        {/* Desktop share button - absolute positioned */}
+        {currentConversationId && messages.length > 0 && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hidden md:block absolute top-3 right-3 z-10"
+            onClick={shareConversation}
+            title="Share conversation"
+          >
+            <Share2 className="h-5 w-5" />
+          </Button>
+        )}
 
         <div className="flex-1 overflow-hidden">
           <ScrollArea className="h-full" ref={scrollRef}>
