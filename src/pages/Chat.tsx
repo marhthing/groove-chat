@@ -75,9 +75,11 @@ const Chat = () => {
   }, [messages]);
 
   const scrollToBottom = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    setTimeout(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+    }, 0);
   };
 
   const loadConversations = async () => {
@@ -295,9 +297,6 @@ const Chat = () => {
         title: "Success",
         description: "Image generated successfully!",
       });
-      
-      // Scroll to show the generated image
-      setTimeout(scrollToBottom, 100);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -313,9 +312,6 @@ const Chat = () => {
     if (!session) return;
 
     setIsLoading(true);
-
-    // Scroll to bottom when user sends a message
-    setTimeout(scrollToBottom, 100);
 
     // Handle image generation
     if (selectedModel === "image-generator") {
