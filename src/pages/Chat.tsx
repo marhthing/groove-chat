@@ -552,7 +552,7 @@ const Chat = () => {
 
       // Check if the last message contains an image
       const hasImage = processedDocument?.type === 'image';
-      const modelToUse = hasImage ? "llama-3.2-90b-vision-preview" : "llama-3.3-70b-versatile";
+      const modelToUse = hasImage ? "meta-llama/llama-4-scout-17b-16e-instruct" : "llama-3.3-70b-versatile";
 
       // Prepare messages for API
       let apiMessages;
