@@ -69,7 +69,7 @@ async function compressImage(file: File): Promise<string> {
 }
 
 /**
- * Extract text from PDF
+ * Extract text from PDF with intelligent truncation
  */
 async function extractPdfText(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
@@ -77,40 +77,160 @@ async function extractPdfText(file: File): Promise<string> {
   
   const pdf = await pdfjsLib.getDocument({ data: uint8Array }).promise;
   let text = '';
+  const MAX_CHARS = 20000; // Limit to ~5000 tokens
   
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    const pageText = content.items.map((item: any) => item.str).join(' ');
-    text += pageText + '\n';
+  // Extract all pages first to get total count
+  const totalPages = pdf.numPages;
+  
+  // If few pages, extract all
+  if (totalPages <= 10) {
+    for (let i = 1; i <= totalPages; i++) {
+      if (text.length >= MAX_CHARS) break;
+      
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const pageText = content.items.map((item: any) => item.str).join(' ');
+      text += `\n--- Page ${i} ---\n${pageText}\n`;
+    }
+  } else {
+    // For large PDFs, sample pages strategically
+    const firstPages = 3;
+    const middlePages = 2;
+    const lastPages = 3;
+    
+    // First pages
+    for (let i = 1; i <= firstPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const pageText = content.items.map((item: any) => item.str).join(' ');
+      text += `\n--- Page ${i} ---\n${pageText}\n`;
+    }
+    
+    // Middle pages
+    const middleStart = Math.floor(totalPages / 2);
+    text += `\n... [Pages ${firstPages + 1} to ${middleStart - 1} omitted] ...\n`;
+    for (let i = 0; i < middlePages; i++) {
+      const pageNum = middleStart + i;
+      if (pageNum > totalPages - lastPages) break;
+      
+      const page = await pdf.getPage(pageNum);
+      const content = await page.getTextContent();
+      const pageText = content.items.map((item: any) => item.str).join(' ');
+      text += `\n--- Page ${pageNum} ---\n${pageText}\n`;
+    }
+    
+    // Last pages
+    text += `\n... [Pages ${middleStart + middlePages} to ${totalPages - lastPages} omitted] ...\n`;
+    for (let i = totalPages - lastPages + 1; i <= totalPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const pageText = content.items.map((item: any) => item.str).join(' ');
+      text += `\n--- Page ${i} ---\n${pageText}\n`;
+    }
+    
+    text = `[PDF Document: ${totalPages} pages total, showing sample pages]\n` + text;
+  }
+  
+  // Final safety check
+  if (text.length > MAX_CHARS) {
+    text = text.substring(0, MAX_CHARS) + '\n\n[Document truncated to fit token limits]';
   }
   
   return text;
 }
 
 /**
- * Extract text from Word document
+ * Extract text from Word document with intelligent truncation
  */
 async function extractDocxText(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
   const result = await mammoth.extractRawText({ arrayBuffer });
-  return result.value;
+  let text = result.value;
+  
+  const MAX_CHARS = 20000; // Limit to ~5000 tokens
+  
+  if (text.length > MAX_CHARS) {
+    // Keep first 60%, last 40% for context
+    const firstPart = text.substring(0, Math.floor(MAX_CHARS * 0.6));
+    const lastPart = text.substring(text.length - Math.floor(MAX_CHARS * 0.4));
+    text = firstPart + '\n\n... [Middle section truncated to fit token limits] ...\n\n' + lastPart;
+  }
+  
+  return text;
 }
 
 /**
- * Extract text from Excel
+ * Extract text from Excel with intelligent truncation
  */
 async function extractExcelText(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
   const workbook = XLSX.read(arrayBuffer, { type: 'array' });
   
   let text = '';
+  const MAX_CHARS = 20000; // Limit to ~5000 tokens (4 chars per token average)
+  
   workbook.SheetNames.forEach(sheetName => {
+    if (text.length >= MAX_CHARS) return; // Stop if we've reached limit
+    
     const worksheet = workbook.Sheets[sheetName];
+    const csvData = XLSX.utils.sheet_to_csv(worksheet);
+    const lines = csvData.split('\n');
+    
     text += `Sheet: ${sheetName}\n`;
-    text += XLSX.utils.sheet_to_csv(worksheet);
-    text += '\n\n';
+    
+    // Include header row (first line)
+    if (lines.length > 0) {
+      text += lines[0] + '\n';
+    }
+    
+    // Calculate how many data rows we can include
+    const remainingChars = MAX_CHARS - text.length;
+    const avgLineLength = csvData.length / lines.length;
+    const maxRows = Math.floor(remainingChars / avgLineLength);
+    
+    // Include sample of data rows
+    if (lines.length > 1) {
+      // Get first rows, middle rows, and last rows for representative sample
+      const sampleSize = Math.min(maxRows, lines.length - 1);
+      const firstBatch = Math.floor(sampleSize / 3);
+      const middleBatch = Math.floor(sampleSize / 3);
+      const lastBatch = sampleSize - firstBatch - middleBatch;
+      
+      // First rows
+      for (let i = 1; i <= Math.min(firstBatch, lines.length - 1); i++) {
+        text += lines[i] + '\n';
+      }
+      
+      // Middle rows
+      if (lines.length > 100) {
+        const middleStart = Math.floor(lines.length / 2) - Math.floor(middleBatch / 2);
+        text += `... [${middleStart - firstBatch - 1} rows omitted] ...\n`;
+        for (let i = 0; i < middleBatch && middleStart + i < lines.length; i++) {
+          text += lines[middleStart + i] + '\n';
+        }
+      }
+      
+      // Last rows
+      if (lastBatch > 0 && lines.length > firstBatch + middleBatch) {
+        const lastStart = Math.max(lines.length - lastBatch, firstBatch + middleBatch + 1);
+        if (lastStart > firstBatch + middleBatch) {
+          text += `... [${lastStart - firstBatch - middleBatch - 1} rows omitted] ...\n`;
+        }
+        for (let i = lastStart; i < lines.length; i++) {
+          text += lines[i] + '\n';
+        }
+      }
+      
+      text += `\n[Total rows in sheet: ${lines.length - 1}]\n`;
+    }
+    
+    text += '\n';
   });
+  
+  // Final safety check
+  if (text.length > MAX_CHARS) {
+    text = text.substring(0, MAX_CHARS) + '\n\n[Data truncated to fit token limits]';
+  }
   
   return text;
 }
@@ -215,9 +335,16 @@ export function createFileMessageContent(
     };
   }
 
+  // Check if data was truncated
+  const wasTruncated = processedDoc.text?.includes('[Data truncated') || 
+                       processedDoc.text?.includes('[Document truncated') ||
+                       processedDoc.text?.includes('rows omitted') ||
+                       processedDoc.text?.includes('Pages') && processedDoc.text?.includes('omitted');
+
   // For documents (PDF, Excel, Word), prepend the extracted text
   const documentContext = `
 I've uploaded a ${processedDoc.type.toUpperCase()} file (${processedDoc.filename}).
+${wasTruncated ? '\nNote: Large document was intelligently sampled to fit within processing limits. Key sections from beginning, middle, and end are included.\n' : ''}
 
 Document content:
 ${processedDoc.text}
