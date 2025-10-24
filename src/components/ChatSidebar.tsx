@@ -127,8 +127,8 @@ export const ChatSidebar = ({
         </Button>
       </div>
 
-      <ScrollArea className="flex-1 p-2 md:p-3">
-        <div className="space-y-1">
+      <ScrollArea className="flex-1 py-2 md:py-3">
+        <div className="space-y-1 px-2 md:px-3">
           {conversations.map((conv) => (
             <div
               key={conv.id}
