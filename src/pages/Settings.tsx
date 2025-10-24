@@ -54,11 +54,14 @@ const Settings = () => {
 
       const file = e.target.files[0];
       const fileExt = file.name.split(".").pop();
-      const filePath = `${userId}-${Math.random()}.${fileExt}`;
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${userId}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          upsert: true
+        });
 
       if (uploadError) {
         throw uploadError;
