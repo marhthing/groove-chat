@@ -187,25 +187,25 @@ export const ChatSidebar = ({
                   onSelectConversation(conv.id);
                   if (window.innerWidth < 768) onToggle();
                 }}
-                className="w-full text-left p-3 rounded-lg flex items-start gap-3"
+                className="w-full text-left p-3 pr-10 rounded-lg flex items-start gap-3"
                 data-testid={`button-conversation-${conv.id}`}
               >
                 <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
-                <div className="flex-1 min-w-0 pr-8 overflow-hidden">
-                  <p className="text-sm font-medium truncate overflow-hidden text-ellipsis whitespace-nowrap">{conv.title}</p>
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <p className="text-sm font-medium truncate">{conv.title}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {new Date(conv.updated_at).toLocaleDateString()}
                   </p>
                 </div>
               </button>
 
-              <div className="absolute right-2 top-2 z-10">
+              <div className="absolute right-1 top-1/2 -translate-y-1/2 z-10">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 bg-sidebar hover:bg-sidebar-accent"
+                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity bg-sidebar hover:bg-sidebar-accent"
                       onClick={(e) => e.stopPropagation()}
                       data-testid={`button-options-${conv.id}`}
                     >
