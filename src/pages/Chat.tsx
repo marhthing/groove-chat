@@ -24,6 +24,7 @@ interface Conversation {
   title: string;
   updated_at: string;
   shareable_id?: string;
+  model_type?: string; // Added to store model type
 }
 
 const Chat = () => {
@@ -94,7 +95,7 @@ const Chat = () => {
   const loadConversations = async () => {
     const { data, error } = await supabase
       .from("conversations")
-      .select("id, title, updated_at, shareable_id")
+      .select("id, title, updated_at, shareable_id, model_type") // Include model_type
       .order("updated_at", { ascending: false });
 
     if (error) {
@@ -129,7 +130,7 @@ const Chat = () => {
     }
 
     const shareUrl = `${window.location.origin}/share/${conversation.shareable_id}`;
-    
+
     try {
       await navigator.clipboard.writeText(shareUrl);
       toast({
@@ -163,6 +164,15 @@ const Chat = () => {
         role: msg.role as "user" | "assistant",
         content: msg.image_url ? `![Generated Image](${msg.image_url})` : msg.content,
       })));
+
+      // Load the model type for the selected conversation
+      const conversation = conversations.find(c => c.id === conversationId);
+      if (conversation && conversation.model_type) {
+        setSelectedModel(conversation.model_type);
+      } else {
+        // Default to 'chat' if no model_type is found (for older conversations)
+        setSelectedModel("chat");
+      }
     }
   };
 
@@ -171,6 +181,8 @@ const Chat = () => {
     // Don't create in database until user sends first message
     setCurrentConversationId(null);
     setMessages([]);
+    // Reset selected model to default when creating a new conversation
+    setSelectedModel("chat");
   };
 
   const updateConversationTitle = async (conversationId: string, firstMessage: string) => {
@@ -237,7 +249,11 @@ const Chat = () => {
       if (!conversationId) {
         const { data, error } = await supabase
           .from("conversations")
-          .insert({ user_id: session.user.id, title: `Image: ${prompt.slice(0, 40)}...` })
+          .insert({ 
+            user_id: session.user.id, 
+            title: `Image: ${prompt.slice(0, 40)}...`,
+            model_type: "image-generator" // Save model type for image generation
+          })
           .select()
           .single();
 
@@ -276,7 +292,7 @@ const Chat = () => {
         .filter(m => m.role === "user")
         .map(m => m.content)
         .join(", ");
-      
+
       // Combine previous context with new prompt
       const fullPrompt = previousUserPrompts 
         ? `${previousUserPrompts}, ${prompt}`
@@ -333,7 +349,10 @@ const Chat = () => {
     if (!conversationId) {
       const { data, error } = await supabase
         .from("conversations")
-        .insert({ user_id: session.user.id })
+        .insert({ 
+          user_id: session.user.id, 
+          model_type: selectedModel // Save the selected model type
+        })
         .select()
         .single();
 
