@@ -334,6 +334,11 @@ const Chat = () => {
       };
       setMessages((prev) => [...prev, assistantMessage]);
 
+      // Force scroll after image is added
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+
       // Save assistant message with image_url to database
       await supabase.from("messages").insert({
         conversation_id: conversationId,
@@ -354,6 +359,10 @@ const Chat = () => {
       });
     } finally {
       setIsLoading(false);
+      // Force another scroll after loading state changes
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
     }
   };
 
