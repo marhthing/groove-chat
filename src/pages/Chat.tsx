@@ -244,13 +244,18 @@ const Chat = () => {
         content: m.content,
       }));
 
+      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+      if (!apiKey) {
+        throw new Error("GROQ API key is not configured. Please add VITE_GROQ_API_KEY to your secrets.");
+      }
+
       const response = await fetch(
         `https://api.groq.com/openai/v1/chat/completions`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
+            "Authorization": `Bearer ${apiKey}`,
           },
           body: JSON.stringify({ 
             model: "mixtral-8x7b-32768",
@@ -267,8 +272,16 @@ const Chat = () => {
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to get AI response");
+        const errorText = await response.text();
+        console.error("Groq API error:", response.status, errorText);
+        let errorMessage = "Failed to get AI response";
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error?.message || errorData.error || errorMessage;
+        } catch (e) {
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
       const reader = response.body?.getReader();
