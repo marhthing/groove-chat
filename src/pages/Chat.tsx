@@ -347,8 +347,8 @@ const Chat = () => {
     <div className="flex h-screen bg-background overflow-hidden flex-col">
       {/* Header - Full Width */}
       <div className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 py-3 md:py-4 z-10">
-        <div className="flex items-center justify-center md:justify-start">
-          <h1 className="text-lg md:text-xl font-semibold">{BRAND_NAME}</h1>
+        <div className="flex items-center justify-start md:ml-64">
+          <h1 className="text-lg md:text-xl font-semibold ml-12 md:ml-0">{BRAND_NAME}</h1>
         </div>
       </div>
 
