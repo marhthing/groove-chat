@@ -199,7 +199,7 @@ export const ChatSidebar = ({
                 </div>
               </button>
 
-              <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute right-2 top-2">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
