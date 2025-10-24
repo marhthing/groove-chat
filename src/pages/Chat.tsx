@@ -555,27 +555,43 @@ const Chat = () => {
       
       // Determine model and tools based on selected mode
       let modelToUse = "llama-3.3-70b-versatile";
-      let tools = undefined;
+      let compoundCustom = undefined;
       
       if (hasImage) {
         modelToUse = "meta-llama/llama-4-scout-17b-16e-instruct";
       } else if (selectedModel === "research-assistant") {
-        modelToUse = "llama-3.3-70b-versatile";
-        tools = [{ type: "web_search" }];
+        modelToUse = "groq/compound";
+        compoundCustom = {
+          tools: {
+            enabled_tools: ["web_search"]
+          }
+        };
       } else if (selectedModel === "problem-solver") {
         modelToUse = "deepseek-r1-distill-llama-70b";
       } else if (selectedModel === "website-analyzer") {
-        modelToUse = "llama-3.3-70b-versatile";
-        tools = [{ type: "visit_website" }];
+        modelToUse = "groq/compound";
+        compoundCustom = {
+          tools: {
+            enabled_tools: ["visit_website"]
+          }
+        };
       } else if (selectedModel === "deep-research") {
-        modelToUse = "llama-3.3-70b-versatile";
-        tools = [
-          { type: "browser_automation" },
-          { type: "web_search" }
-        ];
+        modelToUse = "groq/compound";
+        compoundCustom = {
+          tools: {
+            enabled_tools: ["browser_automation", "web_search"]
+          }
+        };
       } else if (selectedModel === "math-solver") {
-        modelToUse = "llama-3.3-70b-versatile";
-        tools = [{ type: "wolfram_alpha" }];
+        modelToUse = "groq/compound";
+        compoundCustom = {
+          tools: {
+            enabled_tools: ["wolfram_alpha"],
+            wolfram_settings: {
+              authorization: import.meta.env.VITE_WOLFRAM_ALPHA_API_KEY || ""
+            }
+          }
+        };
       }
 
       // Prepare messages for API
@@ -823,8 +839,8 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
         stream: true,
       };
       
-      if (tools) {
-        requestBody.tools = tools;
+      if (compoundCustom) {
+        requestBody.compound_custom = compoundCustom;
       }
 
       const response = await fetch(
