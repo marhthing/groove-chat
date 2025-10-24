@@ -245,12 +245,11 @@ const Chat = () => {
       }));
 
       const response = await fetch(
-        `https://xzfrisbffaujgijunvyg.supabase.co/functions/v1/chat`,
+        `/api/chat`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({ messages: allMessages }),
         }
