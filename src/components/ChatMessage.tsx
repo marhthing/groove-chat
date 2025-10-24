@@ -76,7 +76,7 @@ export const ChatMessage = ({ role, content, fileName, fileType }: ChatMessagePr
       const htmlContent = marked.parse(text, { async: false }) as string;
       return (
         <div 
-          className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none"
+          className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none prose-p:mb-4 prose-headings:mb-3 prose-headings:mt-6 prose-ul:my-4 prose-ol:my-4 prose-li:my-1"
           dangerouslySetInnerHTML={{ __html: htmlContent }}
         />
       );

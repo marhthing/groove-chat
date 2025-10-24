@@ -80,7 +80,7 @@ All colors MUST be HSL.
     --border: 220 13% 20%;
     --input: 220 13% 20%;
     --ring: 215 20% 65%;
-    
+
     --sidebar-background: 220 13% 9%;
     --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 215 20% 65%;
@@ -96,8 +96,31 @@ All colors MUST be HSL.
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Ensure proper spacing in markdown content */
+  .prose p {
+    margin-bottom: 1em;
+  }
+
+  .prose p:last-child {
+    margin-bottom: 0;
+  }
+
+  .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+    margin-top: 1.5em;
+    margin-bottom: 0.75em;
+  }
+
+  .prose ul, .prose ol {
+    margin-top: 1em;
+    margin-bottom: 1em;
+  }
+
+  .prose li {
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
   }
 }
