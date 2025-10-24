@@ -144,13 +144,32 @@ const Chat = () => {
   };
 
   const sendMessage = async (content: string) => {
-    if (!currentConversationId || !session) {
-      await createNewConversation();
-      setTimeout(() => sendMessage(content), 500);
-      return;
-    }
+    if (!session) return;
 
     setIsLoading(true);
+
+    // Create conversation if needed
+    let conversationId = currentConversationId;
+    if (!conversationId) {
+      const { data, error } = await supabase
+        .from("conversations")
+        .insert({ user_id: session.user.id })
+        .select()
+        .single();
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to create conversation",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+      conversationId = data.id;
+      setCurrentConversationId(data.id);
+      await loadConversations();
+    }
 
     // Add user message to UI
     const userMessage: Message = {
@@ -163,7 +182,7 @@ const Chat = () => {
 
     // Save user message to database
     const { error: userError } = await supabase.from("messages").insert({
-      conversation_id: currentConversationId,
+      conversation_id: conversationId,
       role: "user",
       content,
     });
@@ -180,7 +199,7 @@ const Chat = () => {
 
     // Update conversation title if this is the first message
     if (messages.length === 0) {
-      await updateConversationTitle(currentConversationId, content);
+      await updateConversationTitle(conversationId, content);
     }
 
     // Call AI chat function
@@ -258,7 +277,7 @@ const Chat = () => {
 
       // Save assistant message to database
       await supabase.from("messages").insert({
-        conversation_id: currentConversationId,
+        conversation_id: conversationId,
         role: "assistant",
         content: assistantContent,
       });
