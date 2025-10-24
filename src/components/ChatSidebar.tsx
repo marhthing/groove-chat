@@ -32,6 +32,7 @@ import {
 } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { Sheet, SheetTrigger, SheetContent } from "./ui/sheet";
 
 interface Conversation {
   id: string;
@@ -112,120 +113,110 @@ export const ChatSidebar = ({
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="fixed top-16 left-3 z-50 lg:hidden bg-background/80 backdrop-blur-sm border border-border shadow-sm"
-        onClick={onToggle}
-        data-testid="button-menu"
-      >
-        <Menu className="h-5 w-5" />
-      </Button>
-
-      <div
-        className={`fixed lg:static inset-y-0 lg:inset-y-auto left-0 z-40 w-72 md:w-80 lg:w-64 bg-sidebar border-r border-sidebar-border transform transition-transform duration-200 ease-in-out ${
-          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        }`}
-      >
-        <div className="flex flex-col h-full">
-          <div className="p-3 md:p-4 border-b border-sidebar-border">
-            <Button
-              onClick={onNewChat}
-              className="w-full justify-start gap-2 text-sm md:text-base"
-              variant="default"
-              data-testid="button-new-chat"
-            >
-              <Plus className="h-4 w-4" />
-              New Chat
-            </Button>
-          </div>
-
-          <ScrollArea className="flex-1 p-3 md:p-4">
-            <div className="space-y-2">
-              {conversations.map((conv) => (
-                <div
-                  key={conv.id}
-                  className={`group relative rounded-lg transition-colors ${
-                    currentConversationId === conv.id ? "bg-sidebar-accent" : ""
-                  }`}
-                >
-                  <button
-                    onClick={() => {
-                      onSelectConversation(conv.id);
-                      if (window.innerWidth < 1024) onToggle();
-                    }}
-                    className="w-full text-left p-2.5 md:p-3 rounded-lg transition-colors flex items-start gap-2 hover:bg-sidebar-accent"
-                    data-testid={`button-conversation-${conv.id}`}
-                  >
-                    <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs md:text-sm font-medium truncate">{conv.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(conv.updated_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </button>
-                  
-                  <div className="absolute right-2 top-2.5 md:top-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={(e) => e.stopPropagation()}
-                          data-testid={`button-options-${conv.id}`}
-                        >
-                          <MoreVertical className="h-3.5 w-3.5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={(e) => handleRenameClick(conv, e)}
-                          data-testid={`button-rename-${conv.id}`}
-                        >
-                          <Edit2 className="h-4 w-4 mr-2" />
-                          Rename
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={(e) => handleDeleteClick(conv, e)}
-                          className="text-destructive focus:text-destructive"
-                          data-testid={`button-delete-${conv.id}`}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              ))}
+      <Sheet open={isOpen} onOpenChange={onToggle}>
+        <SheetTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden fixed top-3 left-4 z-50 -ml-2"
+            data-testid="button-menu"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="p-0">
+          <div className="flex flex-col h-full">
+            <div className="p-3 md:p-4 border-b border-sidebar-border">
+              <Button
+                onClick={onNewChat}
+                className="w-full justify-start gap-2 text-sm md:text-base"
+                variant="default"
+                data-testid="button-new-chat"
+              >
+                <Plus className="h-4 w-4" />
+                New Chat
+              </Button>
             </div>
-          </ScrollArea>
 
-          <Separator />
+            <ScrollArea className="flex-1 p-3 md:p-4">
+              <div className="space-y-2">
+                {conversations.map((conv) => (
+                  <div
+                    key={conv.id}
+                    className={`group relative rounded-lg transition-colors ${
+                      currentConversationId === conv.id ? "bg-sidebar-accent" : ""
+                    }`}
+                  >
+                    <button
+                      onClick={() => {
+                        onSelectConversation(conv.id);
+                        if (window.innerWidth < 1024) onToggle();
+                      }}
+                      className="w-full text-left p-2.5 md:p-3 rounded-lg transition-colors flex items-start gap-2 hover:bg-sidebar-accent"
+                      data-testid={`button-conversation-${conv.id}`}
+                    >
+                      <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs md:text-sm font-medium truncate">{conv.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(conv.updated_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </button>
 
-          <div className="p-3 md:p-4">
-            <Button
-              onClick={handleLogout}
-              variant="ghost"
-              className="w-full justify-start gap-2 text-sm md:text-base"
-              data-testid="button-logout"
-            >
-              <LogOut className="h-4 w-4" />
-              Sign Out
-            </Button>
+                    <div className="absolute right-2 top-2.5 md:top-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={(e) => e.stopPropagation()}
+                            data-testid={`button-options-${conv.id}`}
+                          >
+                            <MoreVertical className="h-3.5 w-3.5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={(e) => handleRenameClick(conv, e)}
+                            data-testid={`button-rename-${conv.id}`}
+                          >
+                            <Edit2 className="h-4 w-4 mr-2" />
+                            Rename
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => handleDeleteClick(conv, e)}
+                            className="text-destructive focus:text-destructive"
+                            data-testid={`button-delete-${conv.id}`}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+
+            <Separator />
+
+            <div className="p-3 md:p-4">
+              <Button
+                onClick={handleLogout}
+                variant="ghost"
+                className="w-full justify-start gap-2 text-sm md:text-base"
+                data-testid="button-logout"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </Button>
+            </div>
           </div>
-        </div>
-      </div>
-
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-30 lg:hidden backdrop-blur-sm"
-          onClick={onToggle}
-          data-testid="overlay-sidebar"
-        />
-      )}
+        </SheetContent>
+      </Sheet>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
