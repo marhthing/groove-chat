@@ -254,9 +254,9 @@ export const ChatMessage = ({ role, content, fileName, fileType, imageUrl, isStr
               <AvatarImage src="/ai.jpg" alt={BRAND_NAME} />
               <AvatarFallback className="bg-accent text-accent-foreground text-xs">AI</AvatarFallback>
             </Avatar>
-            <div className="flex flex-col space-y-1 min-w-0 max-w-[75%] sm:max-w-[80%] md:max-w-[85%]">
+            <div className={`flex flex-col space-y-1 min-w-0 ${chartMetadata?.chartSpec ? 'flex-1' : 'max-w-[75%] sm:max-w-[80%] md:max-w-[85%]'}`}>
               <p className="text-xs font-medium text-muted-foreground">{BRAND_NAME}</p>
-              <div className="bg-card border border-border rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm w-fit max-w-full overflow-hidden break-words">
+              <div className={`bg-card border border-border rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm ${chartMetadata?.chartSpec ? 'w-full' : 'w-fit'} max-w-full overflow-hidden break-words`}>
                 {renderContent(content)}
               </div>
             </div>
