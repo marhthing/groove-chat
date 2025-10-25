@@ -9,12 +9,10 @@ import markedKatex from "marked-katex-extension";
 import "katex/dist/katex.min.css";
 
 // Configure marked with KaTeX extension and GFM (tables, strikethrough, etc.)
-const katexOptions = {
+marked.use(markedKatex({
   throwOnError: false,
   output: 'html'
-};
-
-marked.use(markedKatex(katexOptions));
+}));
 
 marked.setOptions({
   gfm: true,
@@ -77,17 +75,17 @@ export const ChatMessage = ({ role, content, fileName, fileType, isStreaming = f
     text = text.replace(/\\\[\s*([\s\S]*?)\s*\\\]/g, (match, math) => {
       return `$$${math}$$`;
     });
-    
+
     // Convert \( \) to $ $ for inline math
     text = text.replace(/\\\(\s*([\s\S]*?)\s*\\\)/g, (match, math) => {
       return `$${math}$`;
     });
-    
+
     // Also handle standalone [math] on its own line (for backwards compatibility)
     text = text.replace(/(?:^|\n)\[\s*([\s\S]*?)\s*\](?:\n|$)/g, (match, math) => {
       const hasLatexCommands = math.match(/\\[a-zA-Z]{2,}/);
       const hasMathSymbols = math.match(/[+\-*/=<>^_×÷±∓√∫∑∏∂∆∇∞≈≠≤≥]|\\[a-zA-Z]|\(\s*[a-zA-Z0-9]|[a-zA-Z0-9]\s*\)/);
-      
+
       if (hasLatexCommands || hasMathSymbols) {
         const prefix = match.startsWith('\n') ? '\n' : '';
         const suffix = match.endsWith('\n') ? '\n' : '';
@@ -95,14 +93,14 @@ export const ChatMessage = ({ role, content, fileName, fileType, isStreaming = f
       }
       return match;
     });
-    
+
     return text;
   };
 
   const renderContent = (text: string) => {
     const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/;
     const match = text.match(imageRegex);
-    
+
     if (match) {
       const imageUrl = match[2];
       return (
@@ -114,7 +112,7 @@ export const ChatMessage = ({ role, content, fileName, fileType, isStreaming = f
         />
       );
     }
-    
+
     // Parse markdown for assistant messages
     if (!isUser) {
       // Convert math delimiters before parsing
@@ -132,7 +130,7 @@ export const ChatMessage = ({ role, content, fileName, fileType, isStreaming = f
         </div>
       );
     }
-    
+
     return (
       <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
         {text}
