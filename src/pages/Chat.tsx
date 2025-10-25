@@ -1620,6 +1620,7 @@ Remember: Precision and clarity are paramount. Show your work, explain mathemati
                 <div className="text-center space-y-3 md:space-y-4 p-4 md:p-8 max-w-md">
                   <h2 className="text-xl md:text-2xl font-semibold">
                     {selectedModel === "image-generator" ? "Image Generator" :
+                     selectedModel === "chart-generation" ? "Chart Generation" :
                      selectedModel === "research-assistant" ? "Research Assistant" :
                      selectedModel === "problem-solver" ? "Problem Solver" :
                      selectedModel === "website-analyzer" ? "Website Analyzer" :
@@ -1630,6 +1631,8 @@ Remember: Precision and clarity are paramount. Show your work, explain mathemati
                   <p className="text-sm md:text-base text-muted-foreground">
                     {selectedModel === "image-generator"
                       ? "Describe the image you'd like to generate"
+                      : selectedModel === "chart-generation"
+                      ? "Upload data or describe what you'd like to visualize"
                       : selectedModel === "research-assistant"
                       ? "Ask me anything - I can search the web for current information"
                       : selectedModel === "problem-solver"
