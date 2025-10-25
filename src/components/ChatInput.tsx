@@ -21,6 +21,7 @@ export const ChatInput = ({
 }: ChatInputProps) => {
   const [input, setInput] = useState("");
   const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -120,6 +121,10 @@ export const ChatInput = ({
     setInput(transcribedText);
   };
 
+  const handleRecordingStateChange = (recording: boolean) => {
+    setIsRecording(recording);
+  };
+
   return (
     <form onSubmit={handleSubmit} className="border-t border-border bg-background p-2 md:p-3 safe-bottom">
       <div className="max-w-4xl mx-auto space-y-2">
@@ -158,17 +163,20 @@ export const ChatInput = ({
           <VoiceRecorder
             onTranscriptionComplete={handleVoiceTranscription}
             disabled={disabled}
+            onRecordingStateChange={handleRecordingStateChange}
           />
           
-          <Textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            className="min-h-[50px] md:min-h-[60px] max-h-[150px] md:max-h-[200px] resize-none text-sm md:text-base"
-            disabled={disabled}
-            data-testid="input-message"
-          />
+          {!isRecording && (
+            <Textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={placeholder}
+              className="min-h-[50px] md:min-h-[60px] max-h-[150px] md:max-h-[200px] resize-none text-sm md:text-base"
+              disabled={disabled}
+              data-testid="input-message"
+            />
+          )}
           <Button 
             type="submit" 
             size="icon" 
