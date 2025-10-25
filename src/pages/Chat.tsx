@@ -219,7 +219,7 @@ const Chat = () => {
         file_name: msg.file_name,
         file_type: msg.file_type,
       })));
-      
+
       // Scroll to bottom after loading messages
       scrollToBottom();
     }
@@ -237,14 +237,14 @@ const Chat = () => {
   const updateConversationTitle = async (conversationId: string, firstMessage: string) => {
     // Generate a short, meaningful title (max 30 chars)
     let title = firstMessage.trim();
-    
+
     // Remove markdown, URLs, and extra whitespace
     title = title.replace(/!\[.*?\]\(.*?\)/g, '') // Remove images
                  .replace(/\[.*?\]\(.*?\)/g, '') // Remove links
                  .replace(/https?:\/\/\S+/g, '') // Remove URLs
                  .replace(/\s+/g, ' ') // Normalize whitespace
                  .trim();
-    
+
     // Create a short summary
     if (title.length > 30) {
       // Try to cut at a word boundary
@@ -256,12 +256,12 @@ const Chat = () => {
         title = title.slice(0, 27) + '...';
       }
     }
-    
+
     // Fallback if title is empty
     if (!title || title === '...') {
       title = 'New Chat';
     }
-    
+
     await supabase
       .from("conversations")
       .update({ title })
@@ -578,10 +578,18 @@ IMPORTANT REQUIREMENTS:
                 try {
                   const parsed = JSON.parse(data);
                   const delta = parsed.choices[0]?.delta;
-                  
+
                   if (delta?.content) {
                     if (typeof delta.content === 'string') {
-                      accumulatedContent += delta.content;
+                      // Check if the content is a matplotlib figure reference
+                      if (delta.content.includes('<Figure size') || delta.content.includes('matplotlib.figure.Figure')) {
+                        // Don't add the figure reference text, add helpful message instead
+                        if (!accumulatedContent.includes('Chart Generation Issue')) {
+                          accumulatedContent += `\n\n⚠️ **Chart Generation Issue**: The AI attempted to generate a chart but the current API doesn't support displaying matplotlib charts directly.\n\n**What you can do**:\n- Try using the regular Chat mode and describe what data visualization you need\n- Ask for the data in a table format instead\n- Use Research Assistant mode for data analysis and insights`;
+                        }
+                      } else {
+                        accumulatedContent += delta.content;
+                      }
                       setMessages((prev) =>
                         prev.map((msg) =>
                           msg.id === assistantMessageId
@@ -604,7 +612,7 @@ IMPORTANT REQUIREMENTS:
                         } else if (contentBlock.type === 'image_url' && contentBlock.image_url?.url) {
                           // Handle both data URLs and file references
                           let imageUrl = contentBlock.image_url.url;
-                          
+
                           // If it's a file reference (like "attachment://scatter_plot.png"), 
                           // we need to handle it differently
                           if (!imageUrl.startsWith('data:') && !imageUrl.startsWith('http')) {
@@ -613,7 +621,7 @@ IMPORTANT REQUIREMENTS:
                           } else {
                             chartImageUrl = imageUrl;
                           }
-                          
+
                           setMessages((prev) =>
                             prev.map((msg) =>
                               msg.id === assistantMessageId
@@ -732,7 +740,7 @@ IMPORTANT REQUIREMENTS:
     // Process file upload in background (if present)
     let processedDocument = null;
     let actualContent = content;
-    
+
     if (file) {
       try {
         processedDocument = await processFileUpload(file);
@@ -779,19 +787,19 @@ IMPORTANT REQUIREMENTS:
 
     // Call AI chat function
     try {
-      // Load messages from database (these now only contain user text, not document content)
+      // Load messages from database (these now contain user text, not document content)
       const { data: dbMessages } = await supabase
         .from("messages")
         .select("role, content")
         .eq("conversation_id", conversationId)
         .order("created_at", { ascending: true });
-      
+
       // Prepare all messages for AI
       const messagesForAI = (dbMessages || []).map(m => ({
         role: m.role,
         content: m.content,
       }));
-      
+
       // For the NEW message only, add enhanced content with document text
       // This ensures the AI gets the document but it's not stored in DB or shown in UI
       messagesForAI.push({
@@ -812,11 +820,11 @@ IMPORTANT REQUIREMENTS:
 
       // Check if the last message contains an image
       const hasImage = processedDocument?.type === 'image';
-      
+
       // Determine model and tools based on selected mode
       let modelToUse = "llama-3.3-70b-versatile";
       let compoundCustom = undefined;
-      
+
       if (hasImage) {
         modelToUse = "meta-llama/llama-4-scout-17b-16e-instruct";
       } else if (selectedModel === "research-assistant") {
@@ -1098,7 +1106,7 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
         messages: apiMessages,
         stream: true,
       };
-      
+
       if (compoundCustom) {
         requestBody.compound_custom = compoundCustom;
       }
@@ -1140,7 +1148,7 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
             if (data === "[DONE]") continue;
 
             try {
-              const parsed = JSON.parse(data);
+              const parsed = JSON.JSON.parse(data);
               const content = parsed.choices?.[0]?.delta?.content;
               if (content) {
                 assistantContent += content;
@@ -1177,7 +1185,7 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
         role: "assistant",
         content: assistantContent,
       });
-      
+
       setStreamingMessageId(null);
     } catch (error: any) {
       setStreamingMessageId(null);
