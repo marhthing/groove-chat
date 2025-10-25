@@ -86,7 +86,15 @@ const Auth = () => {
           navigate("/chat");
         }
       } else {
-        const { error } = await supabase.auth.signUp({
+        // Check if user already exists
+        const { data: existingUser } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", (await supabase.auth.signInWithPassword({ email, password: "dummy" })).data.user?.id || "")
+          .single();
+
+        // Alternative approach: try to sign up and check for specific error
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -94,7 +102,32 @@ const Auth = () => {
           },
         });
 
-        if (error) throw error;
+        if (error) {
+          // Check if it's a "user already exists" error
+          if (error.message.includes("already registered") || error.message.includes("already exists")) {
+            toast({
+              title: "User already exists",
+              description: "This email is already registered. Please login instead.",
+              variant: "destructive",
+            });
+            setIsLogin(true);
+            setLoading(false);
+            return;
+          }
+          throw error;
+        }
+
+        // Check if user was not created (email confirmation disabled scenario)
+        if (data.user && !data.user.identities?.length) {
+          toast({
+            title: "User already exists",
+            description: "This email is already registered. Please login instead.",
+            variant: "destructive",
+          });
+          setIsLogin(true);
+          setLoading(false);
+          return;
+        }
 
         toast({
           title: "Account created!",
