@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ChatSidebar } from "@/components/ChatSidebar";
 import { ChatMessage } from "@/components/ChatMessage";
 import { ChatInput } from "@/components/ChatInput";
+import { ChatLoadingIndicator } from "@/components/ChatLoadingIndicator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Menu, Share2 } from "lucide-react";
@@ -1074,6 +1075,19 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
                     fileType={message.file_type}
                   />
                 ))}
+                {isLoading && (
+                  <ChatLoadingIndicator 
+                    mode={
+                      selectedModel === "image-generator" ? "image" :
+                      selectedModel === "research-assistant" || 
+                      selectedModel === "deep-research" || 
+                      selectedModel === "website-analyzer" ? "research" :
+                      selectedModel === "problem-solver" || 
+                      selectedModel === "math-solver" ? "thinking" :
+                      "chat"
+                    }
+                  />
+                )}
               </div>
             )}
           </ScrollArea>

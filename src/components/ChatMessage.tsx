@@ -75,6 +75,27 @@ export const ChatMessage = ({ role, content, fileName, fileType }: ChatMessagePr
     }
   }, [isUser]);
 
+  const convertMathDelimiters = (text: string) => {
+    // Convert [math] to $$math$$ for display math (block-level)
+    // Only converts brackets that are on their own line AND contain math operators/symbols
+    // This prevents breaking markdown links like [text](url)
+    return text.replace(/(?:^|\n)\[\s*([\s\S]*?)\s*\](?:\n|$)/g, (match, math) => {
+      // Check if this contains LaTeX commands or math operators
+      const hasLatexCommands = math.match(/\\[a-zA-Z]{2,}/);  // \frac, \sqrt, \quad, etc.
+      // Broader math detection: common operators, symbols, and LaTeX
+      const hasMathSymbols = math.match(/[+\-*/=<>^_×÷±∓√∫∑∏∂∆∇∞≈≠≤≥]|\\[a-zA-Z]|\(\s*[a-zA-Z0-9]|[a-zA-Z0-9]\s*\)/);
+      
+      if (hasLatexCommands || hasMathSymbols) {
+        // Preserve the surrounding newlines or start/end of string
+        const prefix = match.startsWith('\n') ? '\n' : '';
+        const suffix = match.endsWith('\n') ? '\n' : '';
+        return `${prefix}$$\n${math.trim()}\n$$${suffix}`;
+      }
+      // Not math, return original
+      return match;
+    });
+  };
+
   const renderContent = (text: string) => {
     const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/;
     const match = text.match(imageRegex);
@@ -93,7 +114,9 @@ export const ChatMessage = ({ role, content, fileName, fileType }: ChatMessagePr
     
     // Parse markdown for assistant messages
     if (!isUser) {
-      const htmlContent = marked.parse(text, { async: false }) as string;
+      // Convert math delimiters before parsing
+      const processedText = convertMathDelimiters(text);
+      const htmlContent = marked.parse(processedText, { async: false }) as string;
       return (
         <div 
           className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none prose-p:mb-4 prose-headings:mb-3 prose-headings:mt-6 prose-ul:my-4 prose-ol:my-4 prose-li:my-1 [&_.katex]:text-inherit [&_.katex]:overflow-x-auto [&_.katex]:overflow-y-hidden [&_.katex-display]:my-4 [&_.katex-display]:overflow-x-auto [&_.katex-display]:overflow-y-hidden [&_.katex-display>.katex]:whitespace-normal prose-table:border-collapse prose-table:w-full prose-th:border prose-th:border-gray-300 dark:prose-th:border-gray-700 prose-th:px-4 prose-th:py-2 prose-th:bg-gray-100 dark:prose-th:bg-gray-800 prose-td:border prose-td:border-gray-300 dark:prose-td:border-gray-700 prose-td:px-4 prose-td:py-2"
