@@ -135,7 +135,13 @@ const Chat = () => {
       .select("id, title, updated_at, shareable_id, model_type") // Include model_type
       .order("updated_at", { ascending: false });
 
-    if (!error) {
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load conversations",
+        variant: "destructive",
+      });
+    } else {
       setConversations(data || []);
     }
   };
@@ -199,7 +205,13 @@ const Chat = () => {
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: true });
 
-    if (!error) {
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load messages",
+        variant: "destructive",
+      });
+    } else {
       setMessages((data || []).map(msg => ({
         ...msg,
         role: msg.role as "user" | "assistant",
@@ -240,7 +252,7 @@ const Chat = () => {
     if (error) {
       toast({
         title: "Error",
-        description: "There was an error processing, please try again later",
+        description: "Failed to delete conversation",
         variant: "destructive",
       });
     } else {
@@ -266,7 +278,7 @@ const Chat = () => {
     if (error) {
       toast({
         title: "Error",
-        description: "There was an error processing, please try again later",
+        description: "Failed to rename conversation",
         variant: "destructive",
       });
     } else {
@@ -298,7 +310,7 @@ const Chat = () => {
         if (error) {
           toast({
             title: "Error",
-            description: "There was an error processing, please try again later",
+            description: "Failed to create conversation",
             variant: "destructive",
           });
           setIsLoading(false);
@@ -454,7 +466,7 @@ const Chat = () => {
       if (error) {
         toast({
           title: "Error",
-          description: "There was an error processing, please try again later",
+          description: "Failed to create conversation",
           variant: "destructive",
         });
         setIsLoading(false);
@@ -511,7 +523,11 @@ const Chat = () => {
     });
 
     if (userError) {
-      // Silent fail - don't show error to user for save issues
+      toast({
+        title: "Error",
+        description: "Failed to save message",
+        variant: "destructive",
+      });
       setIsLoading(false);
       return;
     }
