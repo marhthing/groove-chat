@@ -457,7 +457,198 @@ const Chat = () => {
     }
   };
 
-  const sendMessage = async (content: string, file?: AttachedFile) => {
+  const handleChartGeneration = async (prompt: string, chartType: string) => {
+    if (!session) return;
+
+    try {
+      let conversationId = currentConversationId;
+      if (!conversationId) {
+        const { data, error } = await supabase
+          .from("conversations")
+          .insert({ 
+            user_id: session.user.id, 
+            title: `Chart: ${prompt.slice(0, 20)}${prompt.length > 20 ? '...' : ''}`,
+            model_type: "chart-generation"
+          })
+          .select()
+          .single();
+
+        if (error) {
+          toast({
+            title: "Error",
+            description: "Failed to create conversation",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+        conversationId = data.id;
+        setCurrentConversationId(data.id);
+        navigate(`/chat/${data.id}`);
+        await loadConversations();
+      }
+
+      const userMessage: Message = {
+        id: crypto.randomUUID(),
+        role: "user",
+        content: `${prompt} (${chartType} chart)`,
+        created_at: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, userMessage]);
+
+      setTimeout(() => scrollToBottom(), 50);
+
+      await supabase.from("messages").insert({
+        conversation_id: conversationId,
+        role: "user",
+        content: `${prompt} (${chartType} chart)`,
+      });
+
+      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+      if (!apiKey) {
+        throw new Error("Service temporary unavailable.");
+      }
+
+      const chartPrompt = `Create a ${chartType} chart/plot with the following specifications: ${prompt}
+
+IMPORTANT REQUIREMENTS:
+1. Generate the chart using matplotlib or seaborn
+2. Use clear, descriptive labels for axes and title
+3. Apply appropriate colors and styling
+4. Ensure the chart is readable and professional
+5. Include a legend if multiple data series are shown
+6. Return only the chart visualization`;
+
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "groq/compound",
+          messages: [
+            {
+              role: "user",
+              content: chartPrompt
+            }
+          ],
+          stream: true,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Chart generation failed");
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      const assistantMessageId = crypto.randomUUID();
+      let accumulatedContent = "";
+      let chartImageUrl = "";
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: assistantMessageId,
+          role: "assistant",
+          content: "",
+          created_at: new Date().toISOString(),
+        },
+      ]);
+
+      setStreamingMessageId(assistantMessageId);
+
+      if (reader) {
+        let done = false;
+        while (!done) {
+          const { value, done: readerDone } = await reader.read();
+          done = readerDone;
+
+          if (value) {
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split("\n").filter((line) => line.trim() !== "");
+
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                const data = line.substring(6);
+                if (data === "[DONE]") continue;
+
+                try {
+                  const parsed = JSON.parse(data);
+                  const delta = parsed.choices[0]?.delta;
+                  
+                  if (delta?.content) {
+                    if (typeof delta.content === 'string') {
+                      accumulatedContent += delta.content;
+                      setMessages((prev) =>
+                        prev.map((msg) =>
+                          msg.id === assistantMessageId
+                            ? { ...msg, content: accumulatedContent }
+                            : msg
+                        )
+                      );
+                      setTimeout(() => scrollToBottom(), 0);
+                    } else if (Array.isArray(delta.content)) {
+                      for (const contentBlock of delta.content) {
+                        if (contentBlock.type === 'text' && contentBlock.text) {
+                          accumulatedContent += contentBlock.text;
+                          setMessages((prev) =>
+                            prev.map((msg) =>
+                              msg.id === assistantMessageId
+                                ? { ...msg, content: accumulatedContent }
+                                : msg
+                            )
+                          );
+                        } else if (contentBlock.type === 'image_url' && contentBlock.image_url?.url) {
+                          chartImageUrl = contentBlock.image_url.url;
+                          setMessages((prev) =>
+                            prev.map((msg) =>
+                              msg.id === assistantMessageId
+                                ? { ...msg, image_url: chartImageUrl, content: accumulatedContent || "Generated chart" }
+                                : msg
+                            )
+                          );
+                        }
+                        setTimeout(() => scrollToBottom(), 0);
+                      }
+                    }
+                  }
+                } catch (e) {
+                  // Skip invalid JSON
+                }
+              }
+            }
+          }
+        }
+      }
+
+      setStreamingMessageId(null);
+
+      await supabase.from("messages").insert({
+        conversation_id: conversationId,
+        role: "assistant",
+        content: accumulatedContent || "Generated chart",
+        image_url: chartImageUrl || null,
+      });
+
+      if (messages.length === 0) {
+        await updateConversationTitle(conversationId, prompt);
+        await loadConversations();
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "There was an error processing, please try again later",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const sendMessage = async (content: string, file?: AttachedFile, chartType?: string) => {
     if (!session) return;
 
     setIsLoading(true);
@@ -474,6 +665,12 @@ const Chat = () => {
     // Handle image generation
     if (modelToUse === "image-generator") {
       await handleImageGeneration(content);
+      return;
+    }
+
+    // Handle chart generation
+    if (modelToUse === "chart-generation" && chartType) {
+      await handleChartGeneration(content, chartType);
       return;
     }
 
@@ -1117,6 +1314,7 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
                   <ChatLoadingIndicator 
                     mode={
                       selectedModel === "image-generator" ? "image" :
+                      selectedModel === "chart-generation" ? "thinking" :
                       selectedModel === "research-assistant" || 
                       selectedModel === "deep-research" || 
                       selectedModel === "website-analyzer" ? "research" :
@@ -1135,8 +1333,10 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
           <ChatInput 
             onSend={sendMessage} 
             disabled={isLoading}
+            selectedModel={selectedModel}
             placeholder={
               selectedModel === "image-generator" ? "Describe the image you want to generate..." :
+              selectedModel === "chart-generation" ? "Describe the data and insights you want to visualize..." :
               selectedModel === "research-assistant" ? "Ask a question that needs current information..." :
               selectedModel === "problem-solver" ? "Describe your problem or challenge..." :
               selectedModel === "website-analyzer" ? "Paste a URL to analyze..." :
@@ -1144,7 +1344,7 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
               selectedModel === "math-solver" ? "Enter your math or science problem..." :
               "Type your message..."
             }
-            allowFileUpload={selectedModel !== "image-generator"}
+            allowFileUpload={selectedModel !== "image-generator" && selectedModel !== "chart-generation"}
           />
         </div>
       </div>

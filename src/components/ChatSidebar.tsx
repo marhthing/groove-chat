@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, MessageSquare, LogOut, MoreVertical, Trash2, Edit2, Settings, Search, X, Sparkles, ImageIcon, Brain, Globe, Calculator } from "lucide-react";
+import { Plus, MessageSquare, LogOut, MoreVertical, Trash2, Edit2, Settings, Search, X, Sparkles, ImageIcon, Brain, Globe, Calculator, BarChart } from "lucide-react";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
@@ -228,6 +228,7 @@ export const ChatSidebar = ({
   const allModels = [
     { id: "chat", name: "Chat Assistant", icon: <Sparkles className="h-4 w-4 text-blue-500" /> },
     { id: "image-generator", name: "Image Generator", icon: <ImageIcon className="h-4 w-4 text-purple-500" /> },
+    { id: "chart-generation", name: "Chart Generation", icon: <BarChart className="h-4 w-4 text-amber-500" /> },
     { id: "research-assistant", name: "Research Assistant", icon: <Search className="h-4 w-4 text-green-500" /> },
     { id: "problem-solver", name: "Problem Solver", icon: <Brain className="h-4 w-4 text-orange-500" /> },
     { id: "website-analyzer", name: "Website Analyzer", icon: <Globe className="h-4 w-4 text-cyan-500" /> },

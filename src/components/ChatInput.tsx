@@ -4,24 +4,28 @@ import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { FileAttachment, AttachedFile } from "./FileAttachment";
 import { VoiceRecorder } from "./VoiceRecorder";
+import { ChartTypeSelector, ChartType } from "./ChartTypeSelector";
 import { useToast } from "@/hooks/use-toast";
 
 interface ChatInputProps {
-  onSend: (message: string, file?: AttachedFile) => void;
+  onSend: (message: string, file?: AttachedFile, chartType?: ChartType) => void;
   disabled?: boolean;
   placeholder?: string;
   allowFileUpload?: boolean;
+  selectedModel?: string;
 }
 
 export const ChatInput = ({ 
   onSend, 
   disabled, 
   placeholder = "Type your message...",
-  allowFileUpload = true
+  allowFileUpload = true,
+  selectedModel = "chat"
 }: ChatInputProps) => {
   const [input, setInput] = useState("");
   const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [selectedChartType, setSelectedChartType] = useState<ChartType | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -103,10 +107,21 @@ export const ChatInput = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (selectedModel === "chart-generation" && !selectedChartType) {
+      toast({
+        title: "Chart type required",
+        description: "Please select a chart type before sending",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if ((input.trim() || attachedFile) && !disabled) {
-      onSend(input.trim(), attachedFile || undefined);
+      onSend(input.trim(), attachedFile || undefined, selectedChartType || undefined);
       setInput("");
       setAttachedFile(null);
+      setSelectedChartType(null);
     }
   };
 
@@ -132,6 +147,13 @@ export const ChatInput = ({
           <FileAttachment
             attachedFile={attachedFile}
             onRemove={() => setAttachedFile(null)}
+          />
+        )}
+        
+        {selectedModel === "chart-generation" && (
+          <ChartTypeSelector
+            selectedType={selectedChartType}
+            onSelectType={setSelectedChartType}
           />
         )}
         
