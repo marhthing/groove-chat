@@ -473,6 +473,11 @@ const Chat = () => {
 
     // Use previously uploaded file if no new file provided
     const fileToUse = processedFile || lastProcessedFile;
+    
+    console.log('Chart generation - processedFile:', processedFile ? 'exists' : 'null');
+    console.log('Chart generation - lastProcessedFile:', lastProcessedFile ? 'exists' : 'null');
+    console.log('Chart generation - fileToUse:', fileToUse ? 'exists' : 'null');
+    console.log('Chart generation - fileToUse.structuredData:', fileToUse?.structuredData ? 'exists' : 'null');
 
     try {
       let conversationId = currentConversationId;
@@ -1302,6 +1307,17 @@ Remember: Precision and clarity are paramount. Show your work, explain mathemati
       let assistantContent = "";
       let assistantMessageId = crypto.randomUUID();
       setStreamingMessageId(assistantMessageId);
+
+      // Add assistant message placeholder immediately
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: assistantMessageId,
+          role: "assistant" as const,
+          content: "",
+          created_at: new Date().toISOString(),
+        },
+      ]);
 
       while (reader) {
         const { done, value } = await reader.read();
