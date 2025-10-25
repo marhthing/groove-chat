@@ -98,6 +98,8 @@ const Chat = () => {
   useEffect(() => {
     if (currentConversationId) {
       loadMessages(currentConversationId);
+    } else {
+      setMessages([]);
     }
   }, [currentConversationId]);
 
