@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Plus, MessageSquare, LogOut, MoreVertical, Trash2, Edit2, Settings, ImageIcon, Sparkles, Search, Brain, Globe, User } from "lucide-react";
+import { Plus, MessageSquare, LogOut, MoreVertical, Trash2, Edit2, Settings, ImageIcon, Sparkles, Search, Brain, Globe, User, Calculator } from "lucide-react";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
@@ -157,6 +157,24 @@ export const ChatSidebar = ({
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
   const [newTitle, setNewTitle] = useState("");
+  const [topModels, setTopModels] = useState<Array<{id: string, count: number}>>([]);
+
+  // Calculate top 3 most used models
+  useEffect(() => {
+    const modelCounts: Record<string, number> = {};
+    
+    conversations.forEach(conv => {
+      const modelType = conv.model_type || "chat";
+      modelCounts[modelType] = (modelCounts[modelType] || 0) + 1;
+    });
+
+    const sortedModels = Object.entries(modelCounts)
+      .map(([id, count]) => ({ id, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3);
+
+    setTopModels(sortedModels);
+  }, [conversations]);
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -201,6 +219,16 @@ export const ChatSidebar = ({
     }
   };
 
+  const allModels = [
+    { id: "chat", name: "Chat Assistant", icon: <Sparkles className="h-4 w-4 text-blue-500 flex-shrink-0" /> },
+    { id: "image-generator", name: "Image Generator", icon: <ImageIcon className="h-4 w-4 text-purple-500 flex-shrink-0" /> },
+    { id: "research-assistant", name: "Research Assistant", icon: <Search className="h-4 w-4 text-green-500 flex-shrink-0" /> },
+    { id: "problem-solver", name: "Problem Solver", icon: <Brain className="h-4 w-4 text-orange-500 flex-shrink-0" /> },
+    { id: "website-analyzer", name: "Website Analyzer", icon: <Globe className="h-4 w-4 text-cyan-500 flex-shrink-0" /> },
+    { id: "deep-research", name: "Deep Research", icon: <Search className="h-4 w-4 text-indigo-500 flex-shrink-0" /> },
+    { id: "math-solver", name: "Math Solver", icon: <Calculator className="h-4 w-4 text-pink-500 flex-shrink-0" /> },
+  ];
+
   const sidebarContent = (
     <div className="flex flex-col h-full bg-sidebar">
       <div className="p-4">
@@ -235,44 +263,70 @@ export const ChatSidebar = ({
               <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
                 <Search className="h-4 w-4 text-white" />
               </div>
-              <span className="text-sm font-medium">Explore</span>
+              <span className="text-sm font-medium">Explore GPTs</span>
             </button>
-            <button
-              onClick={() => {
-                onSelectModel("chat");
-                if (window.innerWidth < 768) onToggle();
-              }}
-              className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
-                selectedModel === "chat" ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
-              }`}
-            >
-              <Sparkles className="h-4 w-4 text-blue-500 flex-shrink-0" />
-              <span className="text-sm font-medium">Chat Assistant</span>
-            </button>
-            <button
-              onClick={() => {
-                onSelectModel("image-generator");
-                if (window.innerWidth < 768) onToggle();
-              }}
-              className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
-                selectedModel === "image-generator" ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
-              }`}
-            >
-              <ImageIcon className="h-4 w-4 text-purple-500 flex-shrink-0" />
-              <span className="text-sm font-medium">Image Generator</span>
-            </button>
-            <button
-              onClick={() => {
-                onSelectModel("research-assistant");
-                if (window.innerWidth < 768) onToggle();
-              }}
-              className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
-                selectedModel === "research-assistant" ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
-              }`}
-            >
-              <Search className="h-4 w-4 text-green-500 flex-shrink-0" />
-              <span className="text-sm font-medium">Research Assistant</span>
-            </button>
+            
+            {topModels.length > 0 ? (
+              topModels.map(({ id }) => {
+                const model = allModels.find(m => m.id === id);
+                if (!model) return null;
+                
+                return (
+                  <button
+                    key={id}
+                    onClick={() => {
+                      onSelectModel(id);
+                      if (window.innerWidth < 768) onToggle();
+                    }}
+                    className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
+                      selectedModel === id ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
+                    }`}
+                  >
+                    {model.icon}
+                    <span className="text-sm font-medium">{model.name}</span>
+                  </button>
+                );
+              })
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    onSelectModel("chat");
+                    if (window.innerWidth < 768) onToggle();
+                  }}
+                  className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
+                    selectedModel === "chat" ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
+                  }`}
+                >
+                  <Sparkles className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                  <span className="text-sm font-medium">Chat Assistant</span>
+                </button>
+                <button
+                  onClick={() => {
+                    onSelectModel("image-generator");
+                    if (window.innerWidth < 768) onToggle();
+                  }}
+                  className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
+                    selectedModel === "image-generator" ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
+                  }`}
+                >
+                  <ImageIcon className="h-4 w-4 text-purple-500 flex-shrink-0" />
+                  <span className="text-sm font-medium">Image Generator</span>
+                </button>
+                <button
+                  onClick={() => {
+                    onSelectModel("research-assistant");
+                    if (window.innerWidth < 768) onToggle();
+                  }}
+                  className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
+                    selectedModel === "research-assistant" ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
+                  }`}
+                >
+                  <Search className="h-4 w-4 text-green-500 flex-shrink-0" />
+                  <span className="text-sm font-medium">Research Assistant</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
 
