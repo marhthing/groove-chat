@@ -101,25 +101,31 @@ export const ChatMessage = ({ role, content, fileName, fileType, imageUrl, isStr
   const renderContent = (text: string) => {
     // Check for imageUrl prop first (for charts and generated images)
     if (imageUrl) {
-      return (
-        <div className="space-y-2">
-          <img 
-            src={imageUrl} 
-            alt="Generated chart" 
-            className="rounded-lg max-w-full h-auto"
-            style={{ maxHeight: '512px' }}
-            onError={(e) => {
-              console.error('Failed to load image:', imageUrl);
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
-          />
-          {text && text !== "Generated chart" && (
-            <div className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none">
-              {text}
-            </div>
-          )}
-        </div>
-      );
+      // Handle both data URLs and regular URLs
+      const isDataUrl = imageUrl.startsWith('data:');
+      const isHttpUrl = imageUrl.startsWith('http://') || imageUrl.startsWith('https://');
+      
+      if (isDataUrl || isHttpUrl) {
+        return (
+          <div className="space-y-2">
+            <img 
+              src={imageUrl} 
+              alt="Generated chart" 
+              className="rounded-lg max-w-full h-auto"
+              style={{ maxHeight: '512px' }}
+              onError={(e) => {
+                console.error('Failed to load image:', imageUrl);
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+            {text && text !== "Generated chart" && (
+              <div className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none">
+                {text}
+              </div>
+            )}
+          </div>
+        );
+      }
     }
     
     // Check for markdown image format
@@ -128,14 +134,19 @@ export const ChatMessage = ({ role, content, fileName, fileType, imageUrl, isStr
 
     if (match) {
       const markdownImageUrl = match[2];
-      return (
-        <img 
-          src={markdownImageUrl} 
-          alt="Generated" 
-          className="rounded-lg max-w-full h-auto"
-          style={{ maxHeight: '512px' }}
-        />
-      );
+      const isDataUrl = markdownImageUrl.startsWith('data:');
+      const isHttpUrl = markdownImageUrl.startsWith('http://') || markdownImageUrl.startsWith('https://');
+      
+      if (isDataUrl || isHttpUrl) {
+        return (
+          <img 
+            src={markdownImageUrl} 
+            alt="Generated" 
+            className="rounded-lg max-w-full h-auto"
+            style={{ maxHeight: '512px' }}
+          />
+        );
+      }
     }
 
     // Parse markdown for assistant messages
