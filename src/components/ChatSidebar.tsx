@@ -222,9 +222,21 @@ export const ChatSidebar = ({
         {/* GPTs Section */}
         <div className="py-4">
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-3">
-            AI Models
+            GPTs
           </h2>
           <div className="space-y-1">
+            <button
+              onClick={() => {
+                navigate("/explore");
+                if (window.innerWidth < 768) onToggle();
+              }}
+              className="w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors hover:bg-sidebar-accent/50"
+            >
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                <Search className="h-4 w-4 text-white" />
+              </div>
+              <span className="text-sm font-medium">Explore</span>
+            </button>
             <button
               onClick={() => {
                 onSelectModel("chat");
@@ -260,54 +272,6 @@ export const ChatSidebar = ({
             >
               <Search className="h-4 w-4 text-green-500 flex-shrink-0" />
               <span className="text-sm font-medium">Research Assistant</span>
-            </button>
-            <button
-              onClick={() => {
-                onSelectModel("problem-solver");
-                if (window.innerWidth < 768) onToggle();
-              }}
-              className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
-                selectedModel === "problem-solver" ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
-              }`}
-            >
-              <Brain className="h-4 w-4 text-orange-500 flex-shrink-0" />
-              <span className="text-sm font-medium">Problem Solver</span>
-            </button>
-            <button
-              onClick={() => {
-                onSelectModel("website-analyzer");
-                if (window.innerWidth < 768) onToggle();
-              }}
-              className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
-                selectedModel === "website-analyzer" ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
-              }`}
-            >
-              <Globe className="h-4 w-4 text-cyan-500 flex-shrink-0" />
-              <span className="text-sm font-medium">Website Analyzer</span>
-            </button>
-            <button
-              onClick={() => {
-                onSelectModel("deep-research");
-                if (window.innerWidth < 768) onToggle();
-              }}
-              className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
-                selectedModel === "deep-research" ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
-              }`}
-            >
-              <Search className="h-4 w-4 text-indigo-500 flex-shrink-0" />
-              <span className="text-sm font-medium">Deep Research</span>
-            </button>
-            <button
-              onClick={() => {
-                onSelectModel("math-solver");
-                if (window.innerWidth < 768) onToggle();
-              }}
-              className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
-                selectedModel === "math-solver" ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
-              }`}
-            >
-              <Brain className="h-4 w-4 text-pink-500 flex-shrink-0" />
-              <span className="text-sm font-medium">Math Solver</span>
             </button>
           </div>
         </div>

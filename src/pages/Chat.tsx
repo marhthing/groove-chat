@@ -46,6 +46,19 @@ const Chat = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Handle model selection from URL params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const modelParam = params.get('model');
+    if (modelParam) {
+      setSelectedModel(modelParam);
+      setCurrentConversationId(null);
+      setMessages([]);
+      // Clear the URL param
+      navigate('/chat', { replace: true });
+    }
+  }, [navigate]);
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {

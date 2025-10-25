@@ -11,6 +11,7 @@ import Onboarding from "./pages/Onboarding";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import SharedChat from "./pages/SharedChat";
+import Explore from "./pages/Explore";
 
 const queryClient = new QueryClient();
 
@@ -28,7 +29,8 @@ const App = () => (
             <Route path="/chat" element={<Chat />} />
             <Route path="/chat/:conversationId" element={<Chat />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="/share/:shareId" element={<SharedChat />} />
+            <Route path="/explore" element={<Explore />} />
+            <Route path="/share/:shareableId" element={<SharedChat />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
