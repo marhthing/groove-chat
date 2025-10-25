@@ -823,25 +823,25 @@ Important:
       return;
     }
 
-    // Show user message IMMEDIATELY in UI (before anything else)
+    // STEP 1: Show user message in UI immediately (instant feedback)
     const userMessage: Message = {
       id: crypto.randomUUID(),
       role: "user",
-      content: content || '', // Display only user's message
+      content: content || '',
       created_at: new Date().toISOString(),
       file_name: file?.file.name,
       file_type: file?.type,
     };
     setMessages((prev) => [...prev, userMessage]);
 
-    // Create conversation if needed AFTER showing user message
+    // STEP 2: Create conversation if needed (wait for completion)
     let conversationId = currentConversationId;
     if (!conversationId) {
       const { data, error } = await supabase
         .from("conversations")
         .insert({ 
           user_id: session.user.id, 
-          model_type: selectedModel // Save the selected model type
+          model_type: selectedModel
         })
         .select()
         .single();
@@ -857,11 +857,10 @@ Important:
       }
       conversationId = data.id;
       setCurrentConversationId(data.id);
-      // Navigate without reloading - use replace to avoid history pollution
       navigate(`/chat/${data.id}`, { replace: true });
     }
 
-    // Process file upload in background (if present)
+    // STEP 3: Process file if present (wait for completion)
     let processedDocument = null;
     let actualContent = content;
 
@@ -881,13 +880,11 @@ Important:
       }
     }
 
-    // Save user message to database
-    // Store ONLY the user's text, not the document content
-    // The AI will get the document content from messagesForAI below
+    // STEP 4: Save user message to database (wait for completion)
     const { error: userError } = await supabase.from("messages").insert({
       conversation_id: conversationId,
       role: "user",
-      content: content || '', // Store only user's text
+      content: content || '',
       file_name: file?.file.name,
       file_type: file?.type,
     });
@@ -902,12 +899,13 @@ Important:
       return;
     }
 
-    // Update conversation title if this is the first message
+    // STEP 5: Update title and reload sidebar if first message (wait for both)
     if (messages.length === 0) {
       await updateConversationTitle(conversationId, content);
-      // Reload conversations to show the new conversation in sidebar
       await loadConversations();
     }
+
+    // STEP 6: NOW start AI processing (everything above is complete)
 
     // Call AI chat function
     try {
