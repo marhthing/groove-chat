@@ -399,14 +399,14 @@ export const ChatSidebar = ({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 flex-shrink-0 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                        className="h-8 w-8 flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity"
                         onClick={(e) => e.stopPropagation()}
                         data-testid={`button-options-${conv.id}`}
                       >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align="end" className="z-50 bg-popover">
                       <DropdownMenuItem
                         onClick={(e) => handleRenameClick(conv, e)}
                         data-testid={`button-rename-${conv.id}`}
