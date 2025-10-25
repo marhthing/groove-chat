@@ -41,6 +41,7 @@ const Chat = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState<string>("chat");
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -880,6 +881,7 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
       const decoder = new TextDecoder();
       let assistantContent = "";
       let assistantMessageId = crypto.randomUUID();
+      setStreamingMessageId(assistantMessageId);
 
       while (reader) {
         const { done, value } = await reader.read();
@@ -931,7 +933,10 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
         role: "assistant",
         content: assistantContent,
       });
+      
+      setStreamingMessageId(null);
     } catch (error: any) {
+      setStreamingMessageId(null);
       toast({
         title: "Error",
         description: error.message || "Failed to get AI response",
@@ -1073,6 +1078,7 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
                     content={message.content}
                     fileName={message.file_name}
                     fileType={message.file_type}
+                    isStreaming={message.id === streamingMessageId}
                   />
                 ))}
                 {isLoading && (

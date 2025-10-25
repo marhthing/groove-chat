@@ -101,7 +101,18 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+}
 
+@keyframes blink {
+  0%, 49% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0;
+  }
+}
+
+@layer base {
   /* Ensure proper spacing in markdown content */
   .prose p {
     margin-bottom: 1em;

@@ -26,9 +26,10 @@ interface ChatMessageProps {
   content: string;
   fileName?: string;
   fileType?: string;
+  isStreaming?: boolean;
 }
 
-export const ChatMessage = ({ role, content, fileName, fileType }: ChatMessageProps) => {
+export const ChatMessage = ({ role, content, fileName, fileType, isStreaming = false }: ChatMessageProps) => {
   const isUser = role === "user";
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [userInitials, setUserInitials] = useState("U");
@@ -120,10 +121,15 @@ export const ChatMessage = ({ role, content, fileName, fileType }: ChatMessagePr
       const processedText = convertMathDelimiters(text);
       const htmlContent = marked.parse(processedText, { async: false }) as string;
       return (
-        <div 
-          className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none prose-p:mb-4 prose-headings:mb-3 prose-headings:mt-6 prose-ul:my-4 prose-ol:my-4 prose-li:my-1 [&_.katex]:text-inherit [&_.katex]:overflow-x-auto [&_.katex]:overflow-y-hidden [&_.katex-display]:my-4 [&_.katex-display]:overflow-x-auto [&_.katex-display]:overflow-y-hidden [&_.katex-display>.katex]:whitespace-normal prose-table:border-collapse prose-table:w-full prose-th:border prose-th:border-gray-300 dark:prose-th:border-gray-700 prose-th:px-4 prose-th:py-2 prose-th:bg-gray-100 dark:prose-th:bg-gray-800 prose-td:border prose-td:border-gray-300 dark:prose-td:border-gray-700 prose-td:px-4 prose-td:py-2"
-          dangerouslySetInnerHTML={{ __html: htmlContent }}
-        />
+        <div className="relative">
+          <div 
+            className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none prose-p:mb-4 prose-headings:mb-3 prose-headings:mt-6 prose-ul:my-4 prose-ol:my-4 prose-li:my-1 [&_.katex]:text-inherit [&_.katex]:overflow-x-auto [&_.katex]:overflow-y-hidden [&_.katex-display]:my-4 [&_.katex-display]:overflow-x-auto [&_.katex-display]:overflow-y-hidden [&_.katex-display>.katex]:whitespace-normal prose-table:border-collapse prose-table:w-full prose-th:border prose-th:border-gray-300 dark:prose-th:border-gray-700 prose-th:px-4 prose-th:py-2 prose-th:bg-gray-100 dark:prose-th:bg-gray-800 prose-td:border prose-td:border-gray-300 dark:prose-td:border-gray-700 prose-td:px-4 prose-td:py-2"
+            dangerouslySetInnerHTML={{ __html: htmlContent }}
+          />
+          {isStreaming && (
+            <span className="inline-block w-2 h-4 ml-0.5 bg-primary animate-pulse" style={{ animation: 'blink 1s step-end infinite' }} />
+          )}
+        </div>
       );
     }
     
