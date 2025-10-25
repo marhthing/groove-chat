@@ -195,13 +195,13 @@ export const ChatMessage = ({ role, content, fileName, fileType, imageUrl, isStr
 
   return (
     <div className={`w-full py-2 ${isUser ? "bg-background" : "bg-muted/30"}`} data-testid={`message-${role}`}>
-      <div className="max-w-4xl mx-auto px-3">
+      <div className="w-full max-w-5xl mx-auto px-3">
         {isUser ? (
           // User message - right aligned
           <div className="flex gap-2 md:gap-3 justify-end">
-            <div className="flex flex-col items-end space-y-1">
+            <div className="flex flex-col items-end space-y-1 max-w-[85%]">
               <p className="text-xs font-medium text-muted-foreground">You</p>
-              <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-3 py-2 shadow-sm max-w-[80%] md:max-w-[500px] overflow-hidden">
+              <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-3 py-2 shadow-sm w-fit overflow-hidden">
                 {fileName && (
                   <Badge variant="secondary" className="mb-2 gap-1">
                     {getFileIcon()}
@@ -223,9 +223,9 @@ export const ChatMessage = ({ role, content, fileName, fileType, imageUrl, isStr
               <AvatarImage src="/ai.jpg" alt={BRAND_NAME} />
               <AvatarFallback className="bg-accent text-accent-foreground text-xs">AI</AvatarFallback>
             </Avatar>
-            <div className="flex flex-col space-y-1 min-w-0 flex-1">
+            <div className="flex flex-col space-y-1 min-w-0 max-w-[85%]">
               <p className="text-xs font-medium text-muted-foreground">{BRAND_NAME}</p>
-              <div className="bg-card border border-border rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm max-w-[95%] md:max-w-[85%] overflow-hidden">
+              <div className="bg-card border border-border rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm w-fit overflow-hidden">
                 {renderContent(content)}
               </div>
             </div>
