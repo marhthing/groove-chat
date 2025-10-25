@@ -1110,7 +1110,7 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
             if (data === "[DONE]") continue;
 
             try {
-              const parsed = JSON.JSON.parse(data);
+              const parsed = JSON.parse(data);
               const content = parsed.choices?.[0]?.delta?.content;
               if (content) {
                 assistantContent += content;
