@@ -116,10 +116,23 @@ All colors MUST be HSL.
   /* Ensure proper spacing in markdown content */
   .prose p {
     margin-bottom: 1em;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
   }
 
   .prose p:last-child {
     margin-bottom: 0;
+  }
+
+  /* Prevent overflow in code blocks and pre tags */
+  .prose pre {
+    overflow-x: auto;
+    max-width: 100%;
+  }
+
+  .prose code {
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
   }
 
   .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
