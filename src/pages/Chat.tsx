@@ -1073,7 +1073,7 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
         <div className="flex-1 overflow-hidden">
           <ScrollArea className="h-full" ref={scrollRef}>
             {messages.length === 0 ? (
-              <div className="flex items-center justify-center h-full px-4">
+              <div className="flex items-center justify-center h-full px-4 pb-32 md:pb-0">
                 <div className="text-center space-y-3 md:space-y-4 p-4 md:p-8 max-w-md">
                   <h2 className="text-xl md:text-2xl font-semibold">
                     {selectedModel === "image-generator" ? "Image Generator" :
@@ -1102,7 +1102,7 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
                 </div>
               </div>
             ) : (
-              <div className="w-full">
+              <div className="w-full pb-32 md:pb-0">
                 {messages.map((message) => (
                   <ChatMessage
                     key={message.id}
@@ -1131,20 +1131,22 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
           </ScrollArea>
         </div>
 
-        <ChatInput 
-          onSend={sendMessage} 
-          disabled={isLoading}
-          placeholder={
-            selectedModel === "image-generator" ? "Describe the image you want to generate..." :
-            selectedModel === "research-assistant" ? "Ask a question that needs current information..." :
-            selectedModel === "problem-solver" ? "Describe your problem or challenge..." :
-            selectedModel === "website-analyzer" ? "Paste a URL to analyze..." :
-            selectedModel === "deep-research" ? "Ask a complex research question..." :
-            selectedModel === "math-solver" ? "Enter your math or science problem..." :
-            "Type your message..."
-          }
-          allowFileUpload={selectedModel !== "image-generator"}
-        />
+        <div className="fixed bottom-0 left-0 right-0 md:relative md:bottom-auto md:left-auto md:right-auto z-10">
+          <ChatInput 
+            onSend={sendMessage} 
+            disabled={isLoading}
+            placeholder={
+              selectedModel === "image-generator" ? "Describe the image you want to generate..." :
+              selectedModel === "research-assistant" ? "Ask a question that needs current information..." :
+              selectedModel === "problem-solver" ? "Describe your problem or challenge..." :
+              selectedModel === "website-analyzer" ? "Paste a URL to analyze..." :
+              selectedModel === "deep-research" ? "Ask a complex research question..." :
+              selectedModel === "math-solver" ? "Enter your math or science problem..." :
+              "Type your message..."
+            }
+            allowFileUpload={selectedModel !== "image-generator"}
+          />
+        </div>
       </div>
     </div>
   );

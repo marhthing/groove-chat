@@ -126,7 +126,7 @@ export const ChatInput = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="border-t border-border bg-background p-2 md:p-3 safe-bottom">
+    <form onSubmit={handleSubmit} className="border-t border-border bg-background p-2 md:p-3 safe-bottom md:max-w-none">
       <div className="max-w-4xl mx-auto space-y-2">
         {attachedFile && (
           <FileAttachment
