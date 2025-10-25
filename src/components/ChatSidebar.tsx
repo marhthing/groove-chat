@@ -444,6 +444,10 @@ export const ChatSidebar = ({
       {/* Mobile Sheet */}
       <Sheet open={isOpen} onOpenChange={onToggle}>
         <SheetContent side="left" className="p-0 w-72 bg-sidebar">
+          <div className="sr-only">
+            <h2>Navigation Menu</h2>
+            <p>Access your conversations, models, and settings</p>
+          </div>
           {sidebarContent}
         </SheetContent>
       </Sheet>
