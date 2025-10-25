@@ -127,7 +127,7 @@ export const ChatMessage = ({ role, content, fileName, fileType, isStreaming = f
             dangerouslySetInnerHTML={{ __html: htmlContent }}
           />
           {isStreaming && (
-            <span className="inline-block w-2 h-4 ml-0.5 bg-primary animate-pulse" style={{ animation: 'blink 1s step-end infinite' }} />
+            <span className="inline-block w-2 h-4 ml-0.5 bg-primary" style={{ animation: 'blink 0.8s ease-in-out infinite' }} />
           )}
         </div>
       );
