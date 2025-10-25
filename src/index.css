@@ -150,6 +150,30 @@ All colors MUST be HSL.
     margin-bottom: 0.25em;
   }
 
+  /* Table styling with visible borders */
+  .prose table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+  }
+
+  .prose th {
+    border: 1px solid hsl(var(--border));
+    padding: 0.75rem 1rem;
+    background-color: hsl(var(--muted));
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .prose td {
+    border: 1px solid hsl(var(--border));
+    padding: 0.75rem 1rem;
+  }
+
+  .prose tbody tr:nth-child(even) {
+    background-color: hsl(var(--muted) / 0.3);
+  }
+
   /* KaTeX math rendering fixes */
   .katex {
     font-size: 1.05em !important;

@@ -170,7 +170,7 @@ export const ChatMessage = ({ role, content, fileName, fileType, isStreaming = f
             </Avatar>
             <div className="flex flex-col space-y-1 min-w-0 flex-1">
               <p className="text-xs font-medium text-muted-foreground">{BRAND_NAME}</p>
-              <div className="bg-card border border-border rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm max-w-[80%] md:max-w-[500px] overflow-hidden">
+              <div className="bg-card border border-border rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm max-w-[95%] md:max-w-[85%] overflow-hidden">
                 {renderContent(content)}
               </div>
             </div>
