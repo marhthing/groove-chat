@@ -229,11 +229,11 @@ All colors MUST be HSL.
     .prose td {
       border: none;
       border-bottom: 1px solid hsl(var(--border));
-      display: flex;
-      align-items: flex-start;
-      padding: 0.75rem;
+      display: block;
+      padding: 0.75rem 1rem;
       text-align: left;
-      min-height: 2.5rem;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
     }
 
     .prose td:last-child {
@@ -242,12 +242,13 @@ All colors MUST be HSL.
 
     .prose td::before {
       content: attr(data-label);
+      display: block;
       font-weight: 600;
-      min-width: 40%;
-      max-width: 40%;
-      padding-right: 1rem;
-      flex-shrink: 0;
-      color: hsl(var(--foreground));
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 0.25rem;
       word-break: break-word;
     }
 
