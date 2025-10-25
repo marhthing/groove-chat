@@ -96,7 +96,7 @@ const UserProfileDropdown = ({ onNavigateSettings, onLogout }: UserProfileDropdo
         <DropdownMenuTrigger asChild>
           <Button 
             variant="ghost" 
-            className="w-full justify-start p-2 h-auto hover:bg-sidebar-accent"
+            className="w-full justify-start p-2 h-auto hover:bg-sidebar-accent transition-colors"
           >
             <div className="flex items-center gap-3 w-full">
               <Avatar className="h-8 w-8">
@@ -104,10 +104,10 @@ const UserProfileDropdown = ({ onNavigateSettings, onLogout }: UserProfileDropdo
                 <AvatarFallback className="text-xs">{getInitials()}</AvatarFallback>
               </Avatar>
               <div className="flex-1 text-left min-w-0">
-                <p className="text-sm font-medium truncate">{getDisplayName()}</p>
+                <p className="text-sm font-medium truncate text-sidebar-foreground">{getDisplayName()}</p>
                 <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
               </div>
-              <MoreVertical className="h-4 w-4 flex-shrink-0" />
+              <MoreVertical className="h-4 w-4 flex-shrink-0 text-sidebar-foreground" />
             </div>
           </Button>
         </DropdownMenuTrigger>
