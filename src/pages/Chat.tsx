@@ -502,6 +502,8 @@ const Chat = () => {
         role: "user",
         content: `${prompt} (${chartType} chart)`,
         created_at: new Date().toISOString(),
+        file_name: processedFile?.filename,
+        file_type: processedFile?.type,
       };
       setMessages((prev) => [...prev, userMessage]);
 
@@ -511,6 +513,8 @@ const Chat = () => {
         conversation_id: conversationId,
         role: "user",
         content: `${prompt} (${chartType} chart)`,
+        file_name: processedFile?.filename,
+        file_type: processedFile?.type,
       });
 
       let chartSpec = null;
