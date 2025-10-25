@@ -9,10 +9,10 @@ import markedKatex from "marked-katex-extension";
 import "katex/dist/katex.min.css";
 
 // Configure marked with KaTeX extension and GFM (tables, strikethrough, etc.)
+// Supports: $...$ for inline math, $$...$$ for display math (block-level)
 marked.use(markedKatex({
   throwOnError: false,
-  output: 'html',
-  displayMode: false,
+  output: 'htmlAndMathml',
   trust: false,
   strict: false,
   macros: {
