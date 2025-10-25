@@ -957,10 +957,12 @@ Important:
         content: actualContent, // Enhanced content with document text
       });
 
-      // Optimize context if conversation is getting too long (keep last 10 messages)
-      // Reduced from 20 to 10 to ensure we stay within token limits with documents
-      const optimizedMessages = messagesForAI.length > 10 
-        ? messagesForAI.slice(-10) 
+      // Optimize context if conversation is getting too long
+      // For Research Assistant and Deep Research, keep more context to maintain consistency
+      // For other modes, limit to 10 messages to stay within token limits with documents
+      const contextLimit = (selectedModel === "research-assistant" || selectedModel === "deep-research" || selectedModel === "website-analyzer") ? 20 : 10;
+      const optimizedMessages = messagesForAI.length > contextLimit 
+        ? messagesForAI.slice(-contextLimit) 
         : messagesForAI;
 
       const apiKey = import.meta.env.VITE_GROQ_API_KEY;
@@ -1074,12 +1076,19 @@ CAPABILITIES:
 - You can cite sources and provide links
 - You stay up-to-date with current events and trends
 
+CRITICAL: MAINTAIN CONVERSATION CONSISTENCY
+- Review the conversation history before responding
+- If you previously made a claim, verify it's still accurate OR acknowledge the correction
+- Never contradict yourself without explaining why
+- If new information conflicts with earlier statements, say: "I need to correct my earlier response..."
+
 RESEARCH APPROACH:
 1. Use web search for questions requiring current information
 2. Cross-reference multiple sources for accuracy
 3. Provide citations and links when available
 4. Distinguish between facts and opinions
 5. Acknowledge when information might be outdated or uncertain
+6. If a user challenges your previous answer, re-research and either defend with evidence OR correct yourself transparently
 
 RESPONSE FORMAT:
 - Start with a direct answer
@@ -1088,7 +1097,7 @@ RESPONSE FORMAT:
 - Use bullet points for clarity
 - Add "Sources:" section with links when applicable
 
-Remember: Your strength is finding and synthesizing current, accurate information from the web.`;
+Remember: Your strength is finding and synthesizing current, accurate information from the web. Consistency and honesty about corrections build trust.`;
         } else if (selectedModel === "deep-research") {
           systemPrompt = `You are a Deep Research Analyst with advanced browser automation and parallel web browsing capabilities. You conduct comprehensive, multi-source investigations.
 
