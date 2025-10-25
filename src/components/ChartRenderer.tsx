@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   LineChart,
   Line,
@@ -77,6 +77,17 @@ const mergeDatasets = (datasets: ChartDataset[]) => {
 export const ChartRenderer: React.FC<ChartRendererProps> = ({ spec }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   if (!spec || !spec.datasets || spec.datasets.length === 0) {
     return (
@@ -87,6 +98,13 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ spec }) => {
   }
 
   const { type, title, description, xAxis, yAxis, datasets } = spec;
+
+  // Responsive dimensions
+  const chartHeight = isMobile ? 300 : 400;
+  const chartMargin = isMobile 
+    ? { top: 5, right: 5, left: 0, bottom: 5 } 
+    : { top: 5, right: 30, left: 20, bottom: 5 };
+  const pieRadius = isMobile ? 80 : 120;
 
   const downloadChart = async () => {
     if (!chartRef.current) return;
@@ -168,23 +186,27 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ spec }) => {
     const mergedData = mergeDatasets(datasets);
     
     return (
-      <ResponsiveContainer width="100%" height={400}>
-        <LineChart data={mergedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+      <ResponsiveContainer width="100%" height={chartHeight}>
+        <LineChart data={mergedData} margin={chartMargin}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
           <XAxis 
             dataKey="x" 
-            label={xAxis?.label ? { value: xAxis.label, position: 'insideBottom', offset: -5 } : undefined}
+            label={!isMobile && xAxis?.label ? { value: xAxis.label, position: 'insideBottom', offset: -5 } : undefined}
             className="text-xs"
+            angle={isMobile ? -45 : 0}
+            textAnchor={isMobile ? 'end' : 'middle'}
+            height={isMobile ? 60 : 30}
           />
           <YAxis 
-            label={yAxis?.label ? { value: yAxis.label, angle: -90, position: 'insideLeft' } : undefined}
+            label={!isMobile && yAxis?.label ? { value: yAxis.label, angle: -90, position: 'insideLeft' } : undefined}
             className="text-xs"
+            width={isMobile ? 40 : 60}
           />
           <Tooltip 
             contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
             labelStyle={{ color: 'hsl(var(--foreground))' }}
           />
-          <Legend />
+          <Legend wrapperStyle={{ fontSize: isMobile ? '12px' : '14px' }} />
           {datasets.map((dataset, idx) => (
             <Line
               key={idx}
@@ -192,7 +214,7 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ spec }) => {
               dataKey={dataset.label}
               stroke={dataset.color || CHART_COLORS[idx % CHART_COLORS.length]}
               name={dataset.label}
-              strokeWidth={2}
+              strokeWidth={isMobile ? 1.5 : 2}
               dot={{ fill: dataset.color || CHART_COLORS[idx % CHART_COLORS.length] }}
             />
           ))}
@@ -205,23 +227,27 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ spec }) => {
     const mergedData = mergeDatasets(datasets);
     
     return (
-      <ResponsiveContainer width="100%" height={400}>
-        <BarChart data={mergedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+      <ResponsiveContainer width="100%" height={chartHeight}>
+        <BarChart data={mergedData} margin={chartMargin}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
           <XAxis 
             dataKey="x"
-            label={xAxis?.label ? { value: xAxis.label, position: 'insideBottom', offset: -5 } : undefined}
+            label={!isMobile && xAxis?.label ? { value: xAxis.label, position: 'insideBottom', offset: -5 } : undefined}
             className="text-xs"
+            angle={isMobile ? -45 : 0}
+            textAnchor={isMobile ? 'end' : 'middle'}
+            height={isMobile ? 60 : 30}
           />
           <YAxis 
-            label={yAxis?.label ? { value: yAxis.label, angle: -90, position: 'insideLeft' } : undefined}
+            label={!isMobile && yAxis?.label ? { value: yAxis.label, angle: -90, position: 'insideLeft' } : undefined}
             className="text-xs"
+            width={isMobile ? 40 : 60}
           />
           <Tooltip 
             contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
             labelStyle={{ color: 'hsl(var(--foreground))' }}
           />
-          <Legend />
+          <Legend wrapperStyle={{ fontSize: isMobile ? '12px' : '14px' }} />
           {datasets.map((dataset, idx) => (
             <Bar
               key={idx}
@@ -243,15 +269,15 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ spec }) => {
     }));
 
     return (
-      <ResponsiveContainer width="100%" height={400}>
+      <ResponsiveContainer width="100%" height={chartHeight}>
         <PieChart>
           <Pie
             data={pieData}
             cx="50%"
             cy="50%"
-            labelLine={false}
-            label={(entry) => `${entry.name}: ${entry.value}`}
-            outerRadius={120}
+            labelLine={!isMobile}
+            label={isMobile ? false : (entry) => `${entry.name}: ${entry.value}`}
+            outerRadius={pieRadius}
             dataKey="value"
           >
             {pieData.map((entry, index) => (
@@ -261,32 +287,34 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ spec }) => {
           <Tooltip 
             contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
           />
-          <Legend />
+          <Legend wrapperStyle={{ fontSize: isMobile ? '12px' : '14px' }} />
         </PieChart>
       </ResponsiveContainer>
     );
   };
 
   const renderScatterChart = () => (
-    <ResponsiveContainer width="100%" height={400}>
-      <ScatterChart margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+    <ResponsiveContainer width="100%" height={chartHeight}>
+      <ScatterChart margin={chartMargin}>
         <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
         <XAxis 
           dataKey="x" 
           type="number"
-          label={xAxis?.label ? { value: xAxis.label, position: 'insideBottom', offset: -5 } : undefined}
+          label={!isMobile && xAxis?.label ? { value: xAxis.label, position: 'insideBottom', offset: -5 } : undefined}
           className="text-xs"
+          width={isMobile ? 40 : 60}
         />
         <YAxis 
           dataKey="y"
-          label={yAxis?.label ? { value: yAxis.label, angle: -90, position: 'insideLeft' } : undefined}
+          label={!isMobile && yAxis?.label ? { value: yAxis.label, angle: -90, position: 'insideLeft' } : undefined}
           className="text-xs"
+          width={isMobile ? 40 : 60}
         />
         <Tooltip 
           contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
           cursor={{ strokeDasharray: '3 3' }}
         />
-        <Legend />
+        <Legend wrapperStyle={{ fontSize: isMobile ? '12px' : '14px' }} />
         {datasets.map((dataset, idx) => (
           <Scatter
             key={idx}
@@ -303,23 +331,27 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ spec }) => {
     const mergedData = mergeDatasets(datasets);
     
     return (
-      <ResponsiveContainer width="100%" height={400}>
-        <AreaChart data={mergedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+      <ResponsiveContainer width="100%" height={chartHeight}>
+        <AreaChart data={mergedData} margin={chartMargin}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
           <XAxis 
             dataKey="x"
-            label={xAxis?.label ? { value: xAxis.label, position: 'insideBottom', offset: -5 } : undefined}
+            label={!isMobile && xAxis?.label ? { value: xAxis.label, position: 'insideBottom', offset: -5 } : undefined}
             className="text-xs"
+            angle={isMobile ? -45 : 0}
+            textAnchor={isMobile ? 'end' : 'middle'}
+            height={isMobile ? 60 : 30}
           />
           <YAxis 
-            label={yAxis?.label ? { value: yAxis.label, angle: -90, position: 'insideLeft' } : undefined}
+            label={!isMobile && yAxis?.label ? { value: yAxis.label, angle: -90, position: 'insideLeft' } : undefined}
             className="text-xs"
+            width={isMobile ? 40 : 60}
           />
           <Tooltip 
             contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
             labelStyle={{ color: 'hsl(var(--foreground))' }}
           />
-          <Legend />
+          <Legend wrapperStyle={{ fontSize: isMobile ? '12px' : '14px' }} />
           {datasets.map((dataset, idx) => (
             <Area
               key={idx}
@@ -359,26 +391,26 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ spec }) => {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start sm:items-center justify-between gap-2 flex-col sm:flex-row">
         <div className="flex-1">
           {title && (
-            <h3 className="text-lg font-semibold">{title}</h3>
+            <h3 className="text-base sm:text-lg font-semibold">{title}</h3>
           )}
           {description && (
-            <p className="text-sm text-muted-foreground">{description}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">{description}</p>
           )}
         </div>
         <Button
           variant="outline"
           size="sm"
           onClick={downloadChart}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 w-full sm:w-auto"
         >
           <Download className="h-4 w-4" />
           Download
         </Button>
       </div>
-      <div ref={chartRef} className="rounded-lg border border-border p-4 bg-card">
+      <div ref={chartRef} className="rounded-lg border border-border p-2 sm:p-4 bg-card overflow-hidden">
         {renderChart()}
       </div>
     </div>
