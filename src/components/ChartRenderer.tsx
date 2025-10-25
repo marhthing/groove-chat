@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   LineChart,
   Line,
@@ -18,7 +18,10 @@ import {
   ResponsiveContainer,
   Cell,
 } from 'recharts';
+import { Download } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { ChartSpec, ChartDataset } from '@/types/chart';
+import { useToast } from '@/hooks/use-toast';
 
 interface ChartRendererProps {
   spec: ChartSpec;
@@ -72,6 +75,9 @@ const mergeDatasets = (datasets: ChartDataset[]) => {
 };
 
 export const ChartRenderer: React.FC<ChartRendererProps> = ({ spec }) => {
+  const chartRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+
   if (!spec || !spec.datasets || spec.datasets.length === 0) {
     return (
       <div className="p-4 text-sm text-muted-foreground bg-muted/30 rounded-lg">
@@ -81,6 +87,82 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ spec }) => {
   }
 
   const { type, title, description, xAxis, yAxis, datasets } = spec;
+
+  const downloadChart = async () => {
+    if (!chartRef.current) return;
+
+    try {
+      const svgElement = chartRef.current.querySelector('svg');
+      if (!svgElement) {
+        toast({
+          title: "Error",
+          description: "Chart not found",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Clone the SVG to avoid modifying the original
+      const clonedSvg = svgElement.cloneNode(true) as SVGElement;
+      
+      // Set white background
+      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      rect.setAttribute('width', '100%');
+      rect.setAttribute('height', '100%');
+      rect.setAttribute('fill', 'white');
+      clonedSvg.insertBefore(rect, clonedSvg.firstChild);
+
+      // Get SVG dimensions
+      const bbox = svgElement.getBoundingClientRect();
+      clonedSvg.setAttribute('width', bbox.width.toString());
+      clonedSvg.setAttribute('height', bbox.height.toString());
+
+      // Convert SVG to string
+      const svgData = new XMLSerializer().serializeToString(clonedSvg);
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+
+      // Create canvas
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const img = new Image();
+      const url = URL.createObjectURL(svgBlob);
+
+      img.onload = () => {
+        canvas.width = bbox.width * 2; // Higher resolution
+        canvas.height = bbox.height * 2;
+        ctx.scale(2, 2);
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+
+        // Convert to PNG and download
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          const downloadUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = downloadUrl;
+          link.download = `${title?.replace(/[^a-z0-9]/gi, '_') || 'chart'}.png`;
+          link.click();
+          URL.revokeObjectURL(downloadUrl);
+
+          toast({
+            title: "Success",
+            description: "Chart downloaded successfully",
+          });
+        });
+      };
+
+      img.src = url;
+    } catch (error) {
+      console.error('Error downloading chart:', error);
+      toast({
+        title: "Error",
+        description: "Failed to download chart",
+        variant: "destructive",
+      });
+    }
+  };
 
   const renderLineChart = () => {
     const mergedData = mergeDatasets(datasets);
@@ -277,13 +359,26 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ spec }) => {
 
   return (
     <div className="space-y-3">
-      {title && (
-        <h3 className="text-lg font-semibold">{title}</h3>
-      )}
-      {description && (
-        <p className="text-sm text-muted-foreground">{description}</p>
-      )}
-      <div className="rounded-lg border border-border p-4 bg-card">
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          {title && (
+            <h3 className="text-lg font-semibold">{title}</h3>
+          )}
+          {description && (
+            <p className="text-sm text-muted-foreground">{description}</p>
+          )}
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={downloadChart}
+          className="flex items-center gap-2"
+        >
+          <Download className="h-4 w-4" />
+          Download
+        </Button>
+      </div>
+      <div ref={chartRef} className="rounded-lg border border-border p-4 bg-card">
         {renderChart()}
       </div>
     </div>
