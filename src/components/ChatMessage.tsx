@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { marked } from "marked";
 import markedKatex from "marked-katex-extension";
 import "katex/dist/katex.min.css";
+import { ChartRenderer } from "@/components/ChartRenderer";
+import { ChartMetadata } from "@/types/chart";
 
 // Configure marked with KaTeX extension and GFM (tables, strikethrough, etc.)
 marked.use(markedKatex({
@@ -26,12 +28,15 @@ interface ChatMessageProps {
   fileType?: string;
   imageUrl?: string;
   isStreaming?: boolean;
+  metadata?: any;
 }
 
-export const ChatMessage = ({ role, content, fileName, fileType, imageUrl, isStreaming = false }: ChatMessageProps) => {
+export const ChatMessage = ({ role, content, fileName, fileType, imageUrl, isStreaming = false, metadata }: ChatMessageProps) => {
   const isUser = role === "user";
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [userInitials, setUserInitials] = useState("U");
+  
+  const chartMetadata = metadata as ChartMetadata | undefined;
 
   const getFileIcon = () => {
     switch (fileType) {
@@ -99,7 +104,21 @@ export const ChatMessage = ({ role, content, fileName, fileType, imageUrl, isStr
   };
 
   const renderContent = (text: string) => {
-    // Check for imageUrl prop first (for charts and generated images)
+    // Check for chart metadata first (for chart generation)
+    if (chartMetadata?.chartSpec) {
+      return (
+        <div className="space-y-3">
+          <ChartRenderer spec={chartMetadata.chartSpec} />
+          {text && text !== "Generated chart" && (
+            <div className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none">
+              {text}
+            </div>
+          )}
+        </div>
+      );
+    }
+    
+    // Check for imageUrl prop (for generated images)
     if (imageUrl) {
       // Handle both data URLs and regular URLs
       const isDataUrl = imageUrl.startsWith('data:');

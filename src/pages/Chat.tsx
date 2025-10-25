@@ -22,6 +22,7 @@ interface Message {
   image_url?: string;
   file_name?: string;
   file_type?: string;
+  metadata?: any;
 }
 
 interface Conversation {
@@ -514,7 +515,36 @@ const Chat = () => {
         throw new Error("Service temporary unavailable.");
       }
 
-      const chartPrompt = `Create a ${chartType} chart showing: ${prompt}`;
+      const chartPrompt = `You are a data visualization assistant. Generate a ${chartType} chart based on this request: "${prompt}"
+
+Return ONLY a valid JSON object in this exact format (no other text):
+{
+  "type": "${chartType}",
+  "title": "Chart title here",
+  "description": "Brief description",
+  "xAxis": {
+    "label": "X-axis label"
+  },
+  "yAxis": {
+    "label": "Y-axis label"
+  },
+  "datasets": [
+    {
+      "label": "Dataset name",
+      "data": [
+        {"x": "Category 1", "y": 10},
+        {"x": "Category 2", "y": 20}
+      ]
+    }
+  ]
+}
+
+Important:
+- For ${chartType} charts, use appropriate data structure
+- For scatter charts, use numeric x values
+- For pie charts, use category names for x
+- Include realistic sample data based on the request
+- Return ONLY the JSON object, no markdown formatting or code blocks`;
 
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
@@ -523,13 +553,14 @@ const Chat = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "groq/compound",
+          model: "llama-3.3-70b-versatile",
           messages: [
             {
               role: "user",
               content: chartPrompt
             }
-          ]
+          ],
+          temperature: 0.3,
         }),
       });
 
@@ -540,39 +571,40 @@ const Chat = () => {
       const data = await response.json();
       const assistantMessageId = crypto.randomUUID();
 
-      // Extract content from the response
-      const messageContent = data.choices[0]?.message?.content;
-      let chartImageUrl = "";
+      const messageContent = data.choices[0]?.message?.content || "";
+      
+      let chartSpec = null;
       let textContent = "Here's your chart:";
-
-      if (Array.isArray(messageContent)) {
-        // Content is an array of content blocks
-        for (const block of messageContent) {
-          if (block.type === 'image_url') {
-            // The image_url object contains the base64 or URL
-            chartImageUrl = block.image_url?.url || block.image_url || '';
-          } else if (block.type === 'text') {
-            // Only use text content if it's not Python code
-            const text = block.text || '';
-            if (!text.includes('import matplotlib') && !text.includes('plt.')) {
-              textContent = text;
-            }
-          }
+      
+      try {
+        const jsonMatch = messageContent.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          chartSpec = JSON.parse(jsonMatch[0]);
+        } else {
+          chartSpec = JSON.parse(messageContent);
         }
-      } else if (typeof messageContent === 'string') {
-        // If it's a string and looks like code, don't display it
-        if (!messageContent.includes('import matplotlib') && !messageContent.includes('plt.')) {
-          textContent = messageContent;
-        }
+      } catch (parseError) {
+        console.error("Failed to parse chart JSON:", parseError);
+        toast({
+          title: "Error",
+          description: "Failed to generate chart data. Please try again.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
       }
 
-      // Add assistant message with chart
+      const metadata = {
+        chartSpec,
+        rawModelResponse: messageContent,
+      };
+
       const assistantMessage: Message = {
         id: assistantMessageId,
         role: "assistant",
-        content: chartImageUrl ? textContent : "Generated chart",
+        content: textContent,
         created_at: new Date().toISOString(),
-        image_url: chartImageUrl || undefined,
+        metadata,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -581,8 +613,8 @@ const Chat = () => {
       await supabase.from("messages").insert({
         conversation_id: conversationId,
         role: "assistant",
-        content: chartImageUrl ? textContent : "Generated chart",
-        image_url: chartImageUrl || null,
+        content: textContent,
+        metadata,
       });
 
       if (messages.length === 0) {
@@ -590,6 +622,7 @@ const Chat = () => {
         await loadConversations();
       }
     } catch (error: any) {
+      console.error("Chart generation error:", error);
       toast({
         title: "Error",
         description: "There was an error processing, please try again later",
@@ -1261,6 +1294,7 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
                     fileType={message.file_type}
                     imageUrl={message.image_url}
                     isStreaming={message.id === streamingMessageId}
+                    metadata={message.metadata}
                   />
                 ))}
                 {isLoading && (
