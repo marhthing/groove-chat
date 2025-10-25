@@ -1485,7 +1485,7 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
             selectedModel={selectedModel}
             placeholder={
               selectedModel === "image-generator" ? "Describe the image you want to generate..." :
-              selectedModel === "chart-generation" ? "Describe the data and insights you want to visualize..." :
+              selectedModel === "chart-generation" ? "Upload a CSV/Excel file or describe data to visualize..." :
               selectedModel === "research-assistant" ? "Ask a question that needs current information..." :
               selectedModel === "problem-solver" ? "Describe your problem or challenge..." :
               selectedModel === "website-analyzer" ? "Paste a URL to analyze..." :
@@ -1493,7 +1493,7 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
               selectedModel === "math-solver" ? "Enter your math or science problem..." :
               "Type your message..."
             }
-            allowFileUpload={selectedModel !== "image-generator" && selectedModel !== "chart-generation"}
+            allowFileUpload={selectedModel !== "image-generator"}
           />
         </div>
       </div>
