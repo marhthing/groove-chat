@@ -602,11 +602,26 @@ IMPORTANT REQUIREMENTS:
                             )
                           );
                         } else if (contentBlock.type === 'image_url' && contentBlock.image_url?.url) {
-                          chartImageUrl = contentBlock.image_url.url;
+                          // Handle both data URLs and file references
+                          let imageUrl = contentBlock.image_url.url;
+                          
+                          // If it's a file reference (like "attachment://scatter_plot.png"), 
+                          // we need to handle it differently
+                          if (!imageUrl.startsWith('data:') && !imageUrl.startsWith('http')) {
+                            // For now, show a message instead of broken image
+                            accumulatedContent += `\n\n*Chart generated but display format not supported. The API returned: ${imageUrl}*`;
+                          } else {
+                            chartImageUrl = imageUrl;
+                          }
+                          
                           setMessages((prev) =>
                             prev.map((msg) =>
                               msg.id === assistantMessageId
-                                ? { ...msg, image_url: chartImageUrl, content: accumulatedContent || "Generated chart" }
+                                ? { 
+                                    ...msg, 
+                                    image_url: chartImageUrl || undefined, 
+                                    content: accumulatedContent || "Generated chart" 
+                                  }
                                 : msg
                             )
                           );
