@@ -247,10 +247,10 @@ export const ChatSidebar = ({
       <Separator />
 
       <ScrollArea className="flex-1 px-3">
-        {/* GPTs Section */}
+        {/* Model Section */}
         <div className="py-4">
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-3">
-            GPTs
+            Model's
           </h2>
           <div className="space-y-1">
             <button
@@ -263,7 +263,7 @@ export const ChatSidebar = ({
               <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
                 <Search className="h-4 w-4 text-white" />
               </div>
-              <span className="text-sm font-medium">Explore GPTs</span>
+              <span className="text-sm font-medium">Explore Model's</span>
             </button>
             
             {topModels.length > 0 ? (
