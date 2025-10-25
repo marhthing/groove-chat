@@ -532,7 +532,7 @@ const Chat = () => {
       
       // Check if we have structured data from an uploaded file
       if (fileToUse?.structuredData && fileToUse.structuredData.columns.length > 0) {
-        const { columns, rows } = processedFile.structuredData;
+        const { columns, rows } = fileToUse.structuredData;
         
         // Parse the prompt to extract column names using token-based matching
         // This approach avoids regex complexity and handles all special characters
