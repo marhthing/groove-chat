@@ -9,16 +9,12 @@ import markedKatex from "marked-katex-extension";
 import "katex/dist/katex.min.css";
 
 // Configure marked with KaTeX extension and GFM (tables, strikethrough, etc.)
-// Supports: $...$ for inline math, $$...$$ for display math (block-level)
-marked.use(markedKatex({
+const katexOptions = {
   throwOnError: false,
-  output: 'htmlAndMathml',
-  trust: false,
-  strict: false,
-  macros: {
-    "'": "'"
-  }
-}));
+  output: 'html'
+};
+
+marked.use(markedKatex(katexOptions));
 
 marked.setOptions({
   gfm: true,
@@ -76,24 +72,30 @@ export const ChatMessage = ({ role, content, fileName, fileType }: ChatMessagePr
   }, [isUser]);
 
   const convertMathDelimiters = (text: string) => {
-    // Convert [math] to $$math$$ for display math (block-level)
-    // Only converts brackets that are on their own line AND contain math operators/symbols
-    // This prevents breaking markdown links like [text](url)
-    return text.replace(/(?:^|\n)\[\s*([\s\S]*?)\s*\](?:\n|$)/g, (match, math) => {
-      // Check if this contains LaTeX commands or math operators
-      const hasLatexCommands = math.match(/\\[a-zA-Z]{2,}/);  // \frac, \sqrt, \quad, etc.
-      // Broader math detection: common operators, symbols, and LaTeX
+    // First, convert \[ \] to $$ $$ for display math
+    text = text.replace(/\\\[\s*([\s\S]*?)\s*\\\]/g, (match, math) => {
+      return `$$${math}$$`;
+    });
+    
+    // Convert \( \) to $ $ for inline math
+    text = text.replace(/\\\(\s*([\s\S]*?)\s*\\\)/g, (match, math) => {
+      return `$${math}$`;
+    });
+    
+    // Also handle standalone [math] on its own line (for backwards compatibility)
+    text = text.replace(/(?:^|\n)\[\s*([\s\S]*?)\s*\](?:\n|$)/g, (match, math) => {
+      const hasLatexCommands = math.match(/\\[a-zA-Z]{2,}/);
       const hasMathSymbols = math.match(/[+\-*/=<>^_×÷±∓√∫∑∏∂∆∇∞≈≠≤≥]|\\[a-zA-Z]|\(\s*[a-zA-Z0-9]|[a-zA-Z0-9]\s*\)/);
       
       if (hasLatexCommands || hasMathSymbols) {
-        // Preserve the surrounding newlines or start/end of string
         const prefix = match.startsWith('\n') ? '\n' : '';
         const suffix = match.endsWith('\n') ? '\n' : '';
-        return `${prefix}$$\n${math.trim()}\n$$${suffix}`;
+        return `${prefix}$$${math.trim()}$$${suffix}`;
       }
-      // Not math, return original
       return match;
     });
+    
+    return text;
   };
 
   const renderContent = (text: string) => {
