@@ -98,8 +98,9 @@ const Chat = () => {
       setSelectedModel(modelParam);
       setCurrentConversationId(null);
       setMessages([]);
-      // Clear the URL param
-      navigate('/chat', { replace: true });
+      // Navigate to the model-specific route
+      const baseRoute = getRouteFromModel(modelParam);
+      navigate(baseRoute, { replace: true });
     }
   }, [navigate]);
 
