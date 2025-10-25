@@ -109,7 +109,7 @@ export const ChatMessage = ({ role, content, fileName, fileType, imageUrl, isStr
       return (
         <div className="space-y-3">
           <ChartRenderer spec={chartMetadata.chartSpec} />
-          {text && text !== "Generated chart" && (
+          {text && text !== "Generated chart" && text.trim() !== "" && !text.startsWith("Here's your chart") && (
             <div className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none">
               {text}
             </div>
@@ -137,7 +137,7 @@ export const ChatMessage = ({ role, content, fileName, fileType, imageUrl, isStr
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
             />
-            {text && text !== "Generated chart" && (
+            {text && text !== "Generated chart" && text !== "Generated image" && text.trim() !== "" && (
               <div className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none">
                 {text}
               </div>

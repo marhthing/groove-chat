@@ -434,7 +434,7 @@ const Chat = () => {
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
         role: "assistant",
-        content: "Generated image",
+        content: "",
         created_at: new Date().toISOString(),
         image_url: imageUrl,
       };
@@ -447,7 +447,7 @@ const Chat = () => {
       await supabase.from("messages").insert({
         conversation_id: conversationId,
         role: "assistant",
-        content: "Generated image",
+        content: "",
         image_url: imageUrl,
         // Add metadata here, specifically author/name
         metadata: {
@@ -760,7 +760,11 @@ Important:
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
+      
+      // Multiple scroll attempts to ensure chart is visible
       setTimeout(() => scrollToBottom(), 50);
+      setTimeout(() => scrollToBottom(), 200);
+      setTimeout(() => scrollToBottom(), 500);
 
       await supabase.from("messages").insert({
         conversation_id: conversationId,
