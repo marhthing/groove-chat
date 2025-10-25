@@ -96,9 +96,7 @@ const Chat = () => {
   }, [conversationId]);
 
   useEffect(() => {
-    // Only load messages if we're switching to an existing conversation
-    // Skip loading if we just created this conversation (messages are already in state)
-    if (currentConversationId && messages.length === 0) {
+    if (currentConversationId) {
       loadMessages(currentConversationId);
     }
   }, [currentConversationId]);
