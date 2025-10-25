@@ -216,7 +216,7 @@ const Chat = () => {
       setMessages((data || []).map(msg => ({
         ...msg,
         role: msg.role as "user" | "assistant",
-        content: msg.image_url ? `![Generated Image](${msg.image_url})` : msg.content,
+        content: msg.content,
         file_name: msg.file_name,
         file_type: msg.file_type,
       })));
@@ -431,7 +431,7 @@ const Chat = () => {
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
         role: "assistant",
-        content: `![Generated Image](${imageUrl})`,
+        content: "Generated image",
         created_at: new Date().toISOString(),
         image_url: imageUrl,
       };
@@ -1110,7 +1110,7 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
             if (data === "[DONE]") continue;
 
             try {
-              const parsed = JSON.parse(data);
+              const parsed = JSON.JSON.parse(data);
               const content = parsed.choices?.[0]?.delta?.content;
               if (content) {
                 assistantContent += content;
