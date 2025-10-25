@@ -58,6 +58,14 @@ const Chat = () => {
         return '/chart-generation';
       case 'research-assistant':
         return '/research';
+      case 'problem-solver':
+        return '/problem-solver';
+      case 'website-analyzer':
+        return '/website-analyzer';
+      case 'deep-research':
+        return '/deep-research';
+      case 'math-solver':
+        return '/math-solver';
       case 'chat':
       default:
         return '/chat';
@@ -69,6 +77,10 @@ const Chat = () => {
     if (pathname.startsWith('/image-generation')) return 'image-generator';
     if (pathname.startsWith('/chart-generation')) return 'chart-generation';
     if (pathname.startsWith('/research')) return 'research-assistant';
+    if (pathname.startsWith('/problem-solver')) return 'problem-solver';
+    if (pathname.startsWith('/website-analyzer')) return 'website-analyzer';
+    if (pathname.startsWith('/deep-research')) return 'deep-research';
+    if (pathname.startsWith('/math-solver')) return 'math-solver';
     return 'chat';
   };
 

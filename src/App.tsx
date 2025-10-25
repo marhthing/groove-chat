@@ -34,6 +34,14 @@ const App = () => (
             <Route path="/chart-generation/:conversationId" element={<Chat />} />
             <Route path="/research" element={<Chat />} />
             <Route path="/research/:conversationId" element={<Chat />} />
+            <Route path="/problem-solver" element={<Chat />} />
+            <Route path="/problem-solver/:conversationId" element={<Chat />} />
+            <Route path="/website-analyzer" element={<Chat />} />
+            <Route path="/website-analyzer/:conversationId" element={<Chat />} />
+            <Route path="/deep-research" element={<Chat />} />
+            <Route path="/deep-research/:conversationId" element={<Chat />} />
+            <Route path="/math-solver" element={<Chat />} />
+            <Route path="/math-solver/:conversationId" element={<Chat />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/explore" element={<Explore />} />
             <Route path="/share/:shareableId" element={<SharedChat />} />
