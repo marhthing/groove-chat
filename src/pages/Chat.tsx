@@ -235,7 +235,33 @@ const Chat = () => {
   };
 
   const updateConversationTitle = async (conversationId: string, firstMessage: string) => {
-    const title = firstMessage.slice(0, 50) + (firstMessage.length > 50 ? "..." : "");
+    // Generate a short, meaningful title (max 30 chars)
+    let title = firstMessage.trim();
+    
+    // Remove markdown, URLs, and extra whitespace
+    title = title.replace(/!\[.*?\]\(.*?\)/g, '') // Remove images
+                 .replace(/\[.*?\]\(.*?\)/g, '') // Remove links
+                 .replace(/https?:\/\/\S+/g, '') // Remove URLs
+                 .replace(/\s+/g, ' ') // Normalize whitespace
+                 .trim();
+    
+    // Create a short summary
+    if (title.length > 30) {
+      // Try to cut at a word boundary
+      const words = title.slice(0, 30).split(' ');
+      if (words.length > 1) {
+        words.pop(); // Remove last potentially cut word
+        title = words.join(' ') + '...';
+      } else {
+        title = title.slice(0, 27) + '...';
+      }
+    }
+    
+    // Fallback if title is empty
+    if (!title || title === '...') {
+      title = 'New Chat';
+    }
+    
     await supabase
       .from("conversations")
       .update({ title })
@@ -301,7 +327,7 @@ const Chat = () => {
           .from("conversations")
           .insert({ 
             user_id: session.user.id, 
-            title: `Image: ${prompt.slice(0, 40)}...`,
+            title: `Image: ${prompt.slice(0, 20)}${prompt.length > 20 ? '...' : ''}`,
             model_type: "image-generator" // Save model type for image generation
           })
           .select()

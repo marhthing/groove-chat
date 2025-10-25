@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { Plus, MessageSquare, LogOut, MoreVertical, Trash2, Edit2, Settings, ImageIcon, Sparkles, Search, Brain, Globe, User, Calculator, X } from "lucide-react";
+import { Plus, MessageSquare, LogOut, MoreVertical, Trash2, Edit2, Settings, Search, X, Sparkles, ImageIcon, Brain, Globe, Calculator } from "lucide-react";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
@@ -92,12 +91,12 @@ const UserProfileDropdown = ({ onNavigateSettings, onLogout }: UserProfileDropdo
   };
 
   return (
-    <div className="p-4 border-t">
+    <div className="p-4 border-t border-border">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button 
             variant="ghost" 
-            className="w-full justify-start p-2 h-auto hover:bg-sidebar-accent transition-colors"
+            className="w-full justify-start p-2 h-auto hover:bg-sidebar-accent"
           >
             <div className="flex items-center gap-3 w-full">
               <Avatar className="h-8 w-8">
@@ -105,14 +104,14 @@ const UserProfileDropdown = ({ onNavigateSettings, onLogout }: UserProfileDropdo
                 <AvatarFallback className="text-xs">{getInitials()}</AvatarFallback>
               </Avatar>
               <div className="flex-1 text-left min-w-0">
-                <p className="text-sm font-medium truncate text-sidebar-foreground">{getDisplayName()}</p>
+                <p className="text-sm font-medium truncate">{getDisplayName()}</p>
                 <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
               </div>
-              <MoreVertical className="h-4 w-4 flex-shrink-0 text-sidebar-foreground" />
+              <MoreVertical className="h-4 w-4 flex-shrink-0" />
             </div>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" side="top" className="w-56">
+        <DropdownMenuContent align="end" side="top" className="w-56 bg-popover z-50">
           <DropdownMenuItem onClick={onNavigateSettings}>
             <Settings className="mr-2 h-4 w-4" />
             Settings
@@ -227,31 +226,32 @@ export const ChatSidebar = ({
   };
 
   const allModels = [
-    { id: "chat", name: "Chat Assistant", icon: <Sparkles className="h-4 w-4 text-blue-500 flex-shrink-0" /> },
-    { id: "image-generator", name: "Image Generator", icon: <ImageIcon className="h-4 w-4 text-purple-500 flex-shrink-0" /> },
-    { id: "research-assistant", name: "Research Assistant", icon: <Search className="h-4 w-4 text-green-500 flex-shrink-0" /> },
-    { id: "problem-solver", name: "Problem Solver", icon: <Brain className="h-4 w-4 text-orange-500 flex-shrink-0" /> },
-    { id: "website-analyzer", name: "Website Analyzer", icon: <Globe className="h-4 w-4 text-cyan-500 flex-shrink-0" /> },
-    { id: "deep-research", name: "Deep Research", icon: <Search className="h-4 w-4 text-indigo-500 flex-shrink-0" /> },
-    { id: "math-solver", name: "Math Solver", icon: <Calculator className="h-4 w-4 text-pink-500 flex-shrink-0" /> },
+    { id: "chat", name: "Chat Assistant", icon: <Sparkles className="h-4 w-4 text-blue-500" /> },
+    { id: "image-generator", name: "Image Generator", icon: <ImageIcon className="h-4 w-4 text-purple-500" /> },
+    { id: "research-assistant", name: "Research Assistant", icon: <Search className="h-4 w-4 text-green-500" /> },
+    { id: "problem-solver", name: "Problem Solver", icon: <Brain className="h-4 w-4 text-orange-500" /> },
+    { id: "website-analyzer", name: "Website Analyzer", icon: <Globe className="h-4 w-4 text-cyan-500" /> },
+    { id: "deep-research", name: "Deep Research", icon: <Search className="h-4 w-4 text-indigo-500" /> },
+    { id: "math-solver", name: "Math Solver", icon: <Calculator className="h-4 w-4 text-pink-500" /> },
   ];
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-sidebar">
+      {/* Header */}
       <div className="p-4">
         <h1 className="text-xl font-semibold mb-4">{BRAND_NAME}</h1>
         <Button
           onClick={onNewChat}
           className="w-full justify-start gap-2"
           variant="default"
-          data-testid="button-new-chat"
         >
           <Plus className="h-4 w-4" />
           New Chat
         </Button>
         
+        {/* Search */}
         <div className="relative mt-3">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <Input
             type="text"
             placeholder="Search chats"
@@ -272,11 +272,12 @@ export const ChatSidebar = ({
 
       <Separator />
 
+      {/* Content */}
       <ScrollArea className="flex-1 px-3">
-        {/* Model Section */}
+        {/* Models Section */}
         <div className="py-4">
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-3">
-            Model's
+            Models
           </h2>
           <div className="space-y-1">
             <button
@@ -284,12 +285,12 @@ export const ChatSidebar = ({
                 navigate("/explore");
                 if (window.innerWidth < 768) onToggle();
               }}
-              className="w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors hover:bg-sidebar-accent/50"
+              className="w-full text-left p-3 rounded-lg flex items-center gap-3 hover:bg-sidebar-accent/50"
             >
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
                 <Search className="h-4 w-4 text-white" />
               </div>
-              <span className="text-sm font-medium">Explore Model's</span>
+              <span className="text-sm font-medium">Explore Models</span>
             </button>
             
             {topModels.length > 0 ? (
@@ -320,11 +321,11 @@ export const ChatSidebar = ({
                     onSelectModel("chat");
                     if (window.innerWidth < 768) onToggle();
                   }}
-                  className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
+                  className={`w-full text-left p-3 rounded-lg flex items-center gap-3 ${
                     selectedModel === "chat" ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
                   }`}
                 >
-                  <Sparkles className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                  <Sparkles className="h-4 w-4 text-blue-500" />
                   <span className="text-sm font-medium">Chat Assistant</span>
                 </button>
                 <button
@@ -332,11 +333,11 @@ export const ChatSidebar = ({
                     onSelectModel("image-generator");
                     if (window.innerWidth < 768) onToggle();
                   }}
-                  className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
+                  className={`w-full text-left p-3 rounded-lg flex items-center gap-3 ${
                     selectedModel === "image-generator" ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
                   }`}
                 >
-                  <ImageIcon className="h-4 w-4 text-purple-500 flex-shrink-0" />
+                  <ImageIcon className="h-4 w-4 text-purple-500" />
                   <span className="text-sm font-medium">Image Generator</span>
                 </button>
                 <button
@@ -344,11 +345,11 @@ export const ChatSidebar = ({
                     onSelectModel("research-assistant");
                     if (window.innerWidth < 768) onToggle();
                   }}
-                  className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors ${
+                  className={`w-full text-left p-3 rounded-lg flex items-center gap-3 ${
                     selectedModel === "research-assistant" ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
                   }`}
                 >
-                  <Search className="h-4 w-4 text-green-500 flex-shrink-0" />
+                  <Search className="h-4 w-4 text-green-500" />
                   <span className="text-sm font-medium">Research Assistant</span>
                 </button>
               </>
@@ -370,62 +371,63 @@ export const ChatSidebar = ({
               </div>
             ) : (
               filteredConversations.map((conv) => (
-              <div
-                key={conv.id}
-                className={`group relative rounded-lg transition-colors ${
-                  currentConversationId === conv.id ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
-                }`}
-              >
-                <div className="flex items-center gap-2 pr-2">
-                  <button
-                    onClick={() => {
-                      onSelectConversation(conv.id);
-                      if (window.innerWidth < 768) onToggle();
-                    }}
-                    className="flex-1 text-left p-3 rounded-lg flex items-start gap-3 min-w-0"
-                    data-testid={`button-conversation-${conv.id}`}
-                  >
-                    <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{conv.title}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {new Date(conv.updated_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </button>
+                <div
+                  key={conv.id}
+                  className={`relative rounded-lg ${
+                    currentConversationId === conv.id ? "bg-sidebar-accent" : ""
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <button
+                      onClick={() => {
+                        onSelectConversation(conv.id);
+                        if (window.innerWidth < 768) onToggle();
+                      }}
+                      className="flex-1 text-left p-3 rounded-lg flex items-start gap-3 min-w-0 hover:bg-sidebar-accent/50"
+                    >
+                      <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{conv.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {new Date(conv.updated_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </button>
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity"
-                        onClick={(e) => e.stopPropagation()}
-                        data-testid={`button-options-${conv.id}`}
+                    <DropdownMenu modal={false}>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 mr-2 hover:bg-sidebar-accent"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent 
+                        align="end" 
+                        className="w-48 bg-popover border border-border shadow-lg"
+                        sideOffset={5}
                       >
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="z-50 bg-popover">
-                      <DropdownMenuItem
-                        onClick={(e) => handleRenameClick(conv, e)}
-                        data-testid={`button-rename-${conv.id}`}
-                      >
-                        <Edit2 className="h-4 w-4 mr-2" />
-                        Rename
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={(e) => handleDeleteClick(conv, e)}
-                        className="text-destructive focus:text-destructive"
-                        data-testid={`button-delete-${conv.id}`}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                        <DropdownMenuItem
+                          onClick={(e) => handleRenameClick(conv, e)}
+                          className="cursor-pointer"
+                        >
+                          <Edit2 className="h-4 w-4 mr-2" />
+                          Rename
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={(e) => handleDeleteClick(conv, e)}
+                          className="cursor-pointer text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
-              </div>
               ))
             )}
           </div>
@@ -434,7 +436,7 @@ export const ChatSidebar = ({
 
       <Separator />
 
-      {/* Footer with User Profile Dropdown */}
+      {/* Footer */}
       <UserProfileDropdown onNavigateSettings={() => navigate("/settings")} onLogout={handleLogout} />
     </div>
   );
@@ -452,7 +454,7 @@ export const ChatSidebar = ({
         </SheetContent>
       </Sheet>
 
-      {/* Desktop Sidebar - rendered in Chat.tsx */}
+      {/* Desktop Sidebar */}
       {sidebarContent}
 
       {/* Delete Confirmation Dialog */}
@@ -480,7 +482,7 @@ export const ChatSidebar = ({
           <DialogHeader>
             <DialogTitle>Rename conversation</DialogTitle>
             <DialogDescription>
-              Enter a new title for this conversation.
+              Enter a new name for this conversation.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -491,12 +493,7 @@ export const ChatSidebar = ({
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 placeholder="Enter conversation title"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    confirmRename();
-                  }
-                }}
-                data-testid="input-rename-title"
+                maxLength={50}
               />
             </div>
           </div>
@@ -504,8 +501,8 @@ export const ChatSidebar = ({
             <Button variant="outline" onClick={() => setRenameDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={confirmRename} disabled={!newTitle.trim()} data-testid="button-confirm-rename">
-              Rename
+            <Button onClick={confirmRename}>
+              Save
             </Button>
           </DialogFooter>
         </DialogContent>
