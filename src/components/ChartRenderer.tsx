@@ -100,11 +100,12 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ spec }) => {
   const { type, title, description, xAxis, yAxis, datasets } = spec;
 
   // Responsive dimensions
-  const chartHeight = isMobile ? 300 : 400;
+  const chartHeight = isMobile ? 280 : 400;
   const chartMargin = isMobile 
-    ? { top: 5, right: 5, left: 0, bottom: 5 } 
+    ? { top: 10, right: 10, left: -10, bottom: 20 } 
     : { top: 5, right: 30, left: 20, bottom: 5 };
-  const pieRadius = isMobile ? 80 : 120;
+  const pieRadius = isMobile ? 60 : 120;
+  const pieInnerRadius = isMobile ? 30 : 0;
 
   const downloadChart = async () => {
     if (!chartRef.current) return;
@@ -237,17 +238,22 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ spec }) => {
             angle={isMobile ? -45 : 0}
             textAnchor={isMobile ? 'end' : 'middle'}
             height={isMobile ? 60 : 30}
+            tick={{ fontSize: isMobile ? 10 : 12 }}
           />
           <YAxis 
             label={!isMobile && yAxis?.label ? { value: yAxis.label, angle: -90, position: 'insideLeft' } : undefined}
             className="text-xs"
-            width={isMobile ? 40 : 60}
+            width={isMobile ? 45 : 60}
+            tick={{ fontSize: isMobile ? 10 : 12 }}
           />
           <Tooltip 
             contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
             labelStyle={{ color: 'hsl(var(--foreground))' }}
           />
-          <Legend wrapperStyle={{ fontSize: isMobile ? '12px' : '14px' }} />
+          <Legend 
+            wrapperStyle={{ fontSize: isMobile ? '10px' : '14px' }}
+            iconSize={isMobile ? 8 : 14}
+          />
           {datasets.map((dataset, idx) => (
             <Bar
               key={idx}
@@ -274,10 +280,11 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ spec }) => {
           <Pie
             data={pieData}
             cx="50%"
-            cy="50%"
+            cy={isMobile ? "40%" : "50%"}
             labelLine={!isMobile}
             label={isMobile ? false : (entry) => `${entry.name}: ${entry.value}`}
             outerRadius={pieRadius}
+            innerRadius={pieInnerRadius}
             dataKey="value"
           >
             {pieData.map((entry, index) => (
@@ -287,7 +294,13 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ spec }) => {
           <Tooltip 
             contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
           />
-          <Legend wrapperStyle={{ fontSize: isMobile ? '12px' : '14px' }} />
+          <Legend 
+            wrapperStyle={{ fontSize: isMobile ? '10px' : '14px', paddingTop: isMobile ? '10px' : '0' }}
+            iconSize={isMobile ? 8 : 14}
+            layout={isMobile ? "horizontal" : "horizontal"}
+            align="center"
+            verticalAlign="bottom"
+          />
         </PieChart>
       </ResponsiveContainer>
     );
@@ -410,7 +423,7 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ spec }) => {
           Download
         </Button>
       </div>
-      <div ref={chartRef} className="rounded-lg border border-border p-2 sm:p-4 bg-card overflow-hidden">
+      <div ref={chartRef} className="rounded-lg border border-border p-2 sm:p-4 bg-card overflow-x-auto overflow-y-hidden">
         {renderChart()}
       </div>
     </div>
