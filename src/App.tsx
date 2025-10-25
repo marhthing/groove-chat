@@ -28,6 +28,12 @@ const App = () => (
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/chat/:conversationId" element={<Chat />} />
+            <Route path="/image-generation" element={<Chat />} />
+            <Route path="/image-generation/:conversationId" element={<Chat />} />
+            <Route path="/chart-generation" element={<Chat />} />
+            <Route path="/chart-generation/:conversationId" element={<Chat />} />
+            <Route path="/research" element={<Chat />} />
+            <Route path="/research/:conversationId" element={<Chat />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/explore" element={<Explore />} />
             <Route path="/share/:shareableId" element={<SharedChat />} />

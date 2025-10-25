@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ChatSidebar } from "@/components/ChatSidebar";
 import { ChatMessage } from "@/components/ChatMessage";
@@ -35,6 +35,7 @@ interface Conversation {
 
 const Chat = () => {
   const { conversationId } = useParams<{ conversationId?: string }>();
+  const location = useLocation();
   const [session, setSession] = useState<Session | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
@@ -47,6 +48,35 @@ const Chat = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Helper function to get route from model type
+  const getRouteFromModel = (modelType: string): string => {
+    switch (modelType) {
+      case 'image-generator':
+        return '/image-generation';
+      case 'chart-generation':
+        return '/chart-generation';
+      case 'research-assistant':
+        return '/research';
+      case 'chat':
+      default:
+        return '/chat';
+    }
+  };
+
+  // Helper function to get model from route
+  const getModelFromRoute = (pathname: string): string => {
+    if (pathname.startsWith('/image-generation')) return 'image-generator';
+    if (pathname.startsWith('/chart-generation')) return 'chart-generation';
+    if (pathname.startsWith('/research')) return 'research-assistant';
+    return 'chat';
+  };
+
+  // Detect model from current route
+  useEffect(() => {
+    const modelFromRoute = getModelFromRoute(location.pathname);
+    setSelectedModel(modelFromRoute);
+  }, [location.pathname]);
 
   // Handle model selection from URL params
   useEffect(() => {
@@ -231,13 +261,12 @@ const Chat = () => {
   };
 
   const createNewConversation = async () => {
-    // Navigate to /chat without an ID to start a new conversation
-    navigate("/chat");
+    // Navigate to the current model's base route to start a new conversation
+    const baseRoute = getRouteFromModel(selectedModel);
+    navigate(baseRoute);
     setCurrentConversationId(null);
     setMessages([]);
     setLastProcessedFile(null);
-    // Reset selected model to default when creating a new conversation
-    setSelectedModel("chat");
   };
 
   const updateConversationTitle = async (conversationId: string, firstMessage: string) => {
@@ -350,7 +379,7 @@ const Chat = () => {
         }
         conversationId = data.id;
         setCurrentConversationId(data.id);
-        navigate(`/chat/${data.id}`);
+        navigate(`/image-generation/${data.id}`);
         await loadConversations();
       }
 
@@ -503,7 +532,7 @@ const Chat = () => {
         }
         conversationId = data.id;
         setCurrentConversationId(data.id);
-        navigate(`/chat/${data.id}`);
+        navigate(`/chart-generation/${data.id}`);
         await loadConversations();
       }
 
@@ -978,7 +1007,8 @@ Important:
       }
       conversationId = data.id;
       setCurrentConversationId(data.id);
-      navigate(`/chat/${data.id}`, { replace: true });
+      const baseRoute = getRouteFromModel(selectedModel);
+      navigate(`${baseRoute}/${data.id}`, { replace: true });
     }
 
     // STEP 3: Process file if present (wait for completion)
@@ -1481,7 +1511,13 @@ Remember: Precision and clarity are paramount. Show your work, explain mathemati
       conversations={conversations}
       currentConversationId={currentConversationId}
       onNewChat={createNewConversation}
-      onSelectConversation={(id) => navigate(`/chat/${id}`)}
+      onSelectConversation={(id) => {
+        // Find the conversation to get its model type
+        const conversation = conversations.find(c => c.id === id);
+        const modelType = conversation?.model_type || 'chat';
+        const baseRoute = getRouteFromModel(modelType);
+        navigate(`${baseRoute}/${id}`);
+      }}
       onDeleteConversation={deleteConversation}
       onRenameConversation={renameConversation}
       isOpen={isSidebarOpen}
@@ -1490,7 +1526,9 @@ Remember: Precision and clarity are paramount. Show your work, explain mathemati
       onSelectModel={(model) => {
         setSelectedModel(model);
         setMessages([]);
-        navigate("/chat");
+        setCurrentConversationId(null);
+        const baseRoute = getRouteFromModel(model);
+        navigate(baseRoute);
       }}
     />
   );
