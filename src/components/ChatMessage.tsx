@@ -24,10 +24,11 @@ interface ChatMessageProps {
   content: string;
   fileName?: string;
   fileType?: string;
+  imageUrl?: string;
   isStreaming?: boolean;
 }
 
-export const ChatMessage = ({ role, content, fileName, fileType, isStreaming = false }: ChatMessageProps) => {
+export const ChatMessage = ({ role, content, fileName, fileType, imageUrl, isStreaming = false }: ChatMessageProps) => {
   const isUser = role === "user";
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [userInitials, setUserInitials] = useState("U");
@@ -98,14 +99,38 @@ export const ChatMessage = ({ role, content, fileName, fileType, isStreaming = f
   };
 
   const renderContent = (text: string) => {
+    // Check for imageUrl prop first (for charts and generated images)
+    if (imageUrl) {
+      return (
+        <div className="space-y-2">
+          <img 
+            src={imageUrl} 
+            alt="Generated chart" 
+            className="rounded-lg max-w-full h-auto"
+            style={{ maxHeight: '512px' }}
+            onError={(e) => {
+              console.error('Failed to load image:', imageUrl);
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
+          {text && text !== "Generated chart" && (
+            <div className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none">
+              {text}
+            </div>
+          )}
+        </div>
+      );
+    }
+    
+    // Check for markdown image format
     const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/;
     const match = text.match(imageRegex);
 
     if (match) {
-      const imageUrl = match[2];
+      const markdownImageUrl = match[2];
       return (
         <img 
-          src={imageUrl} 
+          src={markdownImageUrl} 
           alt="Generated" 
           className="rounded-lg max-w-full h-auto"
           style={{ maxHeight: '512px' }}

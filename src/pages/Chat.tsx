@@ -1307,6 +1307,7 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
                     content={message.content}
                     fileName={message.file_name}
                     fileType={message.file_type}
+                    imageUrl={message.image_url}
                     isStreaming={message.id === streamingMessageId}
                   />
                 ))}
