@@ -538,26 +538,34 @@ const Chat = () => {
       // Extract content from the response
       const messageContent = data.choices[0]?.message?.content;
       let chartImageUrl = "";
-      let textContent = "";
+      let textContent = "Here's your chart:";
 
       if (Array.isArray(messageContent)) {
         // Content is an array of content blocks
         for (const block of messageContent) {
-          if (block.type === 'text') {
-            textContent += block.text || '';
-          } else if (block.type === 'image_url' && block.image_url?.url) {
-            chartImageUrl = block.image_url.url;
+          if (block.type === 'image_url') {
+            // The image_url object contains the base64 or URL
+            chartImageUrl = block.image_url?.url || block.image_url || '';
+          } else if (block.type === 'text') {
+            // Only use text content if it's not Python code
+            const text = block.text || '';
+            if (!text.includes('import matplotlib') && !text.includes('plt.')) {
+              textContent = text;
+            }
           }
         }
       } else if (typeof messageContent === 'string') {
-        textContent = messageContent;
+        // If it's a string and looks like code, don't display it
+        if (!messageContent.includes('import matplotlib') && !messageContent.includes('plt.')) {
+          textContent = messageContent;
+        }
       }
 
       // Add assistant message with chart
       const assistantMessage: Message = {
         id: assistantMessageId,
         role: "assistant",
-        content: textContent || "Here's your chart:",
+        content: chartImageUrl ? textContent : "Generated chart",
         created_at: new Date().toISOString(),
         image_url: chartImageUrl || undefined,
       };
@@ -568,7 +576,7 @@ const Chat = () => {
       await supabase.from("messages").insert({
         conversation_id: conversationId,
         role: "assistant",
-        content: textContent || "Generated chart",
+        content: chartImageUrl ? textContent : "Generated chart",
         image_url: chartImageUrl || null,
       });
 
