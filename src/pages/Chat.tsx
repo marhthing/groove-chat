@@ -509,15 +509,7 @@ const Chat = () => {
         throw new Error("Service temporary unavailable.");
       }
 
-      const chartPrompt = `Create a ${chartType} chart/plot with the following specifications: ${prompt}
-
-IMPORTANT REQUIREMENTS:
-1. Generate the chart using matplotlib or seaborn
-2. Use clear, descriptive labels for axes and title
-3. Apply appropriate colors and styling
-4. Ensure the chart is readable and professional
-5. Include a legend if multiple data series are shown
-6. Return only the chart visualization`;
+      const chartPrompt = `Create a ${chartType} chart showing: ${prompt}`;
 
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
@@ -532,8 +524,7 @@ IMPORTANT REQUIREMENTS:
               role: "user",
               content: chartPrompt
             }
-          ],
-          stream: true,
+          ]
         }),
       });
 
@@ -541,118 +532,43 @@ IMPORTANT REQUIREMENTS:
         throw new Error("Chart generation failed");
       }
 
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-
+      const data = await response.json();
       const assistantMessageId = crypto.randomUUID();
-      let accumulatedContent = "";
+      
+      // Extract content from the response
+      const messageContent = data.choices[0]?.message?.content;
       let chartImageUrl = "";
+      let textContent = "";
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: assistantMessageId,
-          role: "assistant",
-          content: "",
-          created_at: new Date().toISOString(),
-        },
-      ]);
-
-      setStreamingMessageId(assistantMessageId);
-
-      if (reader) {
-        let done = false;
-        while (!done) {
-          const { value, done: readerDone } = await reader.read();
-          done = readerDone;
-
-          if (value) {
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split("\n").filter((line) => line.trim() !== "");
-
-            for (const line of lines) {
-              if (line.startsWith("data: ")) {
-                const data = line.substring(6);
-                if (data === "[DONE]") continue;
-
-                try {
-                  const parsed = JSON.parse(data);
-                  const delta = parsed.choices[0]?.delta;
-
-                  if (delta?.content) {
-                    if (typeof delta.content === 'string') {
-                      // Check if the content is a matplotlib figure reference
-                      if (delta.content.includes('<Figure size') || delta.content.includes('matplotlib.figure.Figure')) {
-                        // Don't add the figure reference text, add helpful message instead
-                        if (!accumulatedContent.includes('Chart Generation Issue')) {
-                          accumulatedContent += `\n\n⚠️ **Chart Generation Issue**: The AI attempted to generate a chart but the current API doesn't support displaying matplotlib charts directly.\n\n**What you can do**:\n- Try using the regular Chat mode and describe what data visualization you need\n- Ask for the data in a table format instead\n- Use Research Assistant mode for data analysis and insights`;
-                        }
-                      } else {
-                        accumulatedContent += delta.content;
-                      }
-                      setMessages((prev) =>
-                        prev.map((msg) =>
-                          msg.id === assistantMessageId
-                            ? { ...msg, content: accumulatedContent }
-                            : msg
-                        )
-                      );
-                      setTimeout(() => scrollToBottom(), 0);
-                    } else if (Array.isArray(delta.content)) {
-                      for (const contentBlock of delta.content) {
-                        if (contentBlock.type === 'text' && contentBlock.text) {
-                          accumulatedContent += contentBlock.text;
-                          setMessages((prev) =>
-                            prev.map((msg) =>
-                              msg.id === assistantMessageId
-                                ? { ...msg, content: accumulatedContent }
-                                : msg
-                            )
-                          );
-                        } else if (contentBlock.type === 'image_url' && contentBlock.image_url?.url) {
-                          // Handle both data URLs and file references
-                          let imageUrl = contentBlock.image_url.url;
-
-                          // If it's a file reference (like "attachment://scatter_plot.png"), 
-                          // we need to handle it differently
-                          if (!imageUrl.startsWith('data:') && !imageUrl.startsWith('http')) {
-                            // For now, show a message instead of broken image
-                            accumulatedContent += `\n\n*Chart generated but display format not supported. The API returned: ${imageUrl}*`;
-                          } else {
-                            chartImageUrl = imageUrl;
-                          }
-
-                          setMessages((prev) =>
-                            prev.map((msg) =>
-                              msg.id === assistantMessageId
-                                ? { 
-                                    ...msg, 
-                                    image_url: chartImageUrl || undefined, 
-                                    content: accumulatedContent || "Generated chart" 
-                                  }
-                                : msg
-                            )
-                          );
-                        }
-                        setTimeout(() => scrollToBottom(), 0);
-                      }
-                    }
-                  }
-                } catch (e) {
-                  // Skip invalid JSON
-                }
-              }
-            }
+      if (Array.isArray(messageContent)) {
+        // Content is an array of content blocks
+        for (const block of messageContent) {
+          if (block.type === 'text') {
+            textContent += block.text || '';
+          } else if (block.type === 'image_url' && block.image_url?.url) {
+            chartImageUrl = block.image_url.url;
           }
         }
+      } else if (typeof messageContent === 'string') {
+        textContent = messageContent;
       }
 
-      setStreamingMessageId(null);
+      // Add assistant message with chart
+      const assistantMessage: Message = {
+        id: assistantMessageId,
+        role: "assistant",
+        content: textContent || "Here's your chart:",
+        created_at: new Date().toISOString(),
+        image_url: chartImageUrl || undefined,
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+      setTimeout(() => scrollToBottom(), 50);
 
       await supabase.from("messages").insert({
         conversation_id: conversationId,
         role: "assistant",
-        content: accumulatedContent || "Generated chart",
+        content: textContent || "Generated chart",
         image_url: chartImageUrl || null,
       });
 
