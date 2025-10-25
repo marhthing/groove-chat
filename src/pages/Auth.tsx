@@ -86,14 +86,7 @@ const Auth = () => {
           navigate("/chat");
         }
       } else {
-        // Check if user already exists
-        const { data: existingUser } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("id", (await supabase.auth.signInWithPassword({ email, password: "dummy" })).data.user?.id || "")
-          .single();
-
-        // Alternative approach: try to sign up and check for specific error
+        // Try to sign up and check for specific error
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
