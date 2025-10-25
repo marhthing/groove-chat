@@ -530,8 +530,8 @@ export async function processFileUpload(
       storageUrl: publicUrl
     };
   } catch (error: any) {
-    console.error('File processing error:', error);
-    throw new Error(error.message || 'Failed to process document');
+    // console.error('File processing error:', error);
+    throw new Error('There was an error processing, please try again later');
   }
 }
 

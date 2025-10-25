@@ -12,11 +12,11 @@ serve(async (req) => {
 
   try {
     const { messages } = await req.json();
-    console.log("Chat request received with messages:", messages.length);
+    // console.log("Chat request received with messages:", messages.length);
 
     const AI_API_KEY = Deno.env.get("GROQ_API_KEY");
     if (!AI_API_KEY) {
-      console.error("AI service is not configured");
+      // console.error("AI service is not configured");
       throw new Error("The service is currently unavailable. Please try again later.");
     }
 
@@ -41,30 +41,10 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
+      // console.error("AI gateway error:", response.status, errorText);
       
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Too many requests. Please wait a moment and try again." }),
-          {
-            status: 429,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
-      
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Service temporarily unavailable. Please try again later." }),
-          {
-            status: 402,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
-
       return new Response(
-        JSON.stringify({ error: "Something went wrong. Please try again." }),
+        JSON.stringify({ error: "There was an error processing, please try again later" }),
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -72,14 +52,14 @@ serve(async (req) => {
       );
     }
 
-    console.log("Streaming response from AI gateway");
+    // console.log("Streaming response from AI gateway");
     return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (e) {
-    console.error("Chat error:", e);
+    // console.error("Chat error:", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      JSON.stringify({ error: "There was an error processing, please try again later" }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

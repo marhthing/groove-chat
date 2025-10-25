@@ -135,13 +135,7 @@ const Chat = () => {
       .select("id, title, updated_at, shareable_id, model_type") // Include model_type
       .order("updated_at", { ascending: false });
 
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load conversations",
-        variant: "destructive",
-      });
-    } else {
+    if (!error) {
       setConversations(data || []);
     }
   };
@@ -205,13 +199,7 @@ const Chat = () => {
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: true });
 
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load messages",
-        variant: "destructive",
-      });
-    } else {
+    if (!error) {
       setMessages((data || []).map(msg => ({
         ...msg,
         role: msg.role as "user" | "assistant",
@@ -252,7 +240,7 @@ const Chat = () => {
     if (error) {
       toast({
         title: "Error",
-        description: "Failed to delete conversation",
+        description: "There was an error processing, please try again later",
         variant: "destructive",
       });
     } else {
@@ -278,7 +266,7 @@ const Chat = () => {
     if (error) {
       toast({
         title: "Error",
-        description: "Failed to rename conversation",
+        description: "There was an error processing, please try again later",
         variant: "destructive",
       });
     } else {
@@ -310,7 +298,7 @@ const Chat = () => {
         if (error) {
           toast({
             title: "Error",
-            description: "Failed to create conversation",
+            description: "There was an error processing, please try again later",
             variant: "destructive",
           });
           setIsLoading(false);
@@ -391,7 +379,7 @@ const Chat = () => {
       );
 
       if (!synthResponse.ok) {
-        throw new Error("Failed to synthesize prompt");
+        throw new Error("There was an error processing, please try again later");
       }
 
       const synthData = await synthResponse.json();
@@ -423,7 +411,7 @@ const Chat = () => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to generate image",
+        description: "There was an error processing, please try again later",
         variant: "destructive",
       });
     } finally {
@@ -466,7 +454,7 @@ const Chat = () => {
       if (error) {
         toast({
           title: "Error",
-          description: "Failed to create conversation",
+          description: "There was an error processing, please try again later",
           variant: "destructive",
         });
         setIsLoading(false);
@@ -502,8 +490,8 @@ const Chat = () => {
         actualContent = enhancedContent;
       } catch (error: any) {
         toast({
-          title: "File Processing Error",
-          description: error.message || "Failed to process the uploaded file",
+          title: "Error",
+          description: "There was an error processing, please try again later",
           variant: "destructive",
         });
         setIsLoading(false);
@@ -523,11 +511,7 @@ const Chat = () => {
     });
 
     if (userError) {
-      toast({
-        title: "Error",
-        description: "Failed to save message",
-        variant: "destructive",
-      });
+      // Silent fail - don't show error to user for save issues
       setIsLoading(false);
       return;
     }
@@ -879,15 +863,8 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Groq API error:", response.status, errorText);
-        let errorMessage = "Failed to get AI response";
-        try {
-          const errorData = JSON.parse(errorText);
-          errorMessage = errorData.error?.message || errorData.error || errorMessage;
-        } catch (e) {
-          errorMessage = errorText || errorMessage;
-        }
-        throw new Error(errorMessage);
+        // console.error("Groq API error:", response.status, errorText);
+        throw new Error("There was an error processing, please try again later");
       }
 
       const reader = response.body?.getReader();
@@ -952,7 +929,7 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
       setStreamingMessageId(null);
       toast({
         title: "Error",
-        description: error.message || "Failed to get AI response",
+        description: "There was an error processing, please try again later",
         variant: "destructive",
       });
     } finally {
