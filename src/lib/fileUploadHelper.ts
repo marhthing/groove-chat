@@ -11,7 +11,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 ).toString();
 
 export interface ProcessedDocument {
-  type: 'image' | 'pdf' | 'docx' | 'excel' | 'csv';
+  type: 'image' | 'pdf' | 'docx' | 'excel' | 'csv' | 'other';
   filename: string;
   data?: string; // base64 for images
   text?: string; // extracted text for documents

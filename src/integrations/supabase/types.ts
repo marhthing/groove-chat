@@ -18,6 +18,8 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          model_type: string | null
+          shareable_id: string | null
           title: string
           updated_at: string
           user_id: string
@@ -25,6 +27,8 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          model_type?: string | null
+          shareable_id?: string | null
           title?: string
           updated_at?: string
           user_id: string
@@ -32,6 +36,8 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          model_type?: string | null
+          shareable_id?: string | null
           title?: string
           updated_at?: string
           user_id?: string
@@ -43,21 +49,30 @@ export type Database = {
           content: string
           conversation_id: string
           created_at: string
+          file_name: string | null
+          file_type: string | null
           id: string
+          image_url: string | null
           role: string
         }
         Insert: {
           content: string
           conversation_id: string
           created_at?: string
+          file_name?: string | null
+          file_type?: string | null
           id?: string
+          image_url?: string | null
           role: string
         }
         Update: {
           content?: string
           conversation_id?: string
           created_at?: string
+          file_name?: string | null
+          file_type?: string | null
           id?: string
+          image_url?: string | null
           role?: string
         }
         Relationships: [
@@ -114,7 +129,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_shareable_id: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
