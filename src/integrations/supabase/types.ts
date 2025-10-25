@@ -53,6 +53,7 @@ export type Database = {
           file_type: string | null
           id: string
           image_url: string | null
+          metadata: Json | null
           role: string
         }
         Insert: {
@@ -63,6 +64,7 @@ export type Database = {
           file_type?: string | null
           id?: string
           image_url?: string | null
+          metadata?: Json | null
           role: string
         }
         Update: {
@@ -73,6 +75,7 @@ export type Database = {
           file_type?: string | null
           id?: string
           image_url?: string | null
+          metadata?: Json | null
           role?: string
         }
         Relationships: [

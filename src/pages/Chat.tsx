@@ -219,6 +219,7 @@ const Chat = () => {
         content: msg.content,
         file_name: msg.file_name,
         file_type: msg.file_type,
+        metadata: msg.metadata,
       })));
 
       // Scroll to bottom after loading messages
