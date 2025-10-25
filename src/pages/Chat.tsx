@@ -888,8 +888,8 @@ Important:
       conversation_id: conversationId,
       role: "user",
       content: content || '', // Store only user's text
-      file_name: processedDocument?.filename,
-      file_type: processedDocument?.type,
+      file_name: file?.file.name,
+      file_type: file?.type,
     });
 
     if (userError) {
