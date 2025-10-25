@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Plus, MessageSquare, LogOut, MoreVertical, Trash2, Edit2, Settings, ImageIcon, Sparkles, Search, Brain, Globe } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, MessageSquare, LogOut, MoreVertical, Trash2, Edit2, Settings, ImageIcon, Sparkles, Search, Brain, Globe, User } from "lucide-react";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
@@ -35,12 +35,96 @@ import {
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Sheet, SheetContent } from "./ui/sheet";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 interface Conversation {
   id: string;
   title: string;
   updated_at: string;
 }
+
+interface UserProfileDropdownProps {
+  onNavigateSettings: () => void;
+  onLogout: () => void;
+}
+
+const UserProfileDropdown = ({ onNavigateSettings, onLogout }: UserProfileDropdownProps) => {
+  const [userEmail, setUserEmail] = useState<string>("");
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
+  const [firstName, setFirstName] = useState<string>("");
+  const [lastName, setLastName] = useState<string>("");
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setUserEmail(session.user.email || "");
+        
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("profile_picture, first_name, last_name")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profile) {
+          setProfilePicture(profile.profile_picture || null);
+          setFirstName(profile.first_name || "");
+          setLastName(profile.last_name || "");
+        }
+      }
+    };
+    loadUserData();
+  }, []);
+
+  const getInitials = () => {
+    if (firstName && lastName) {
+      return `${firstName[0]}${lastName[0]}`.toUpperCase();
+    }
+    return userEmail ? userEmail[0].toUpperCase() : "U";
+  };
+
+  const getDisplayName = () => {
+    if (firstName && lastName) {
+      return `${firstName} ${lastName}`;
+    }
+    return userEmail.split("@")[0];
+  };
+
+  return (
+    <div className="p-4 border-t">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start p-2 h-auto hover:bg-sidebar-accent"
+          >
+            <div className="flex items-center gap-3 w-full">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={profilePicture || undefined} />
+                <AvatarFallback className="text-xs">{getInitials()}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 text-left min-w-0">
+                <p className="text-sm font-medium truncate">{getDisplayName()}</p>
+                <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
+              </div>
+              <MoreVertical className="h-4 w-4 flex-shrink-0" />
+            </div>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" side="top" className="w-56">
+          <DropdownMenuItem onClick={onNavigateSettings}>
+            <Settings className="mr-2 h-4 w-4" />
+            Settings
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onLogout}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+};
 
 interface ChatSidebarProps {
   conversations: Conversation[];
@@ -300,25 +384,8 @@ export const ChatSidebar = ({
 
       <Separator />
 
-      {/* Footer with Settings and Sign Out */}
-      <div className="p-4 border-t space-y-2">
-        <Button 
-          variant="ghost" 
-          className="w-full justify-start"
-          onClick={() => navigate("/settings")}
-        >
-          <Settings className="mr-2 h-4 w-4" />
-          Settings
-        </Button>
-        <Button 
-          variant="ghost" 
-          className="w-full justify-start"
-          onClick={handleLogout}
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          Sign Out
-        </Button>
-      </div>
+      {/* Footer with User Profile Dropdown */}
+      <UserProfileDropdown onNavigateSettings={() => navigate("/settings")} onLogout={handleLogout} />
     </div>
   );
 
