@@ -896,28 +896,44 @@ Important:
         rawModelResponse: fileToUse ? `Generated from file: ${fileToUse.filename}` : '',
       };
 
+      // FIRST: Save to database with metadata
+      const { data: savedMessage, error: saveError } = await supabase
+        .from("messages")
+        .insert({
+          conversation_id: conversationId,
+          role: "assistant",
+          content: textContent,
+          metadata,
+        })
+        .select()
+        .single();
+
+      if (saveError) {
+        console.error("Failed to save message:", saveError);
+        toast({
+          title: "Error",
+          description: "Failed to save chart",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // THEN: Add to UI state with the saved message data (including ID from DB)
       const assistantMessage: Message = {
-        id: assistantMessageId,
+        id: savedMessage.id,
         role: "assistant",
         content: textContent,
-        created_at: new Date().toISOString(),
-        metadata: metadata, // Ensure metadata is explicitly set
+        created_at: savedMessage.created_at,
+        metadata: savedMessage.metadata,
       };
 
-      // Add message to state immediately so chart renders right away
       setMessages((prev) => [...prev, assistantMessage]);
       
       // Multiple scroll attempts to ensure chart is visible
       setTimeout(() => scrollToBottom(), 50);
       setTimeout(() => scrollToBottom(), 200);
       setTimeout(() => scrollToBottom(), 500);
-
-      await supabase.from("messages").insert({
-        conversation_id: conversationId,
-        role: "assistant",
-        content: textContent,
-        metadata,
-      });
 
       if (messages.length === 0) {
         await updateConversationTitle(conversationId, prompt);
@@ -1652,7 +1668,7 @@ Remember: Precision and clarity are paramount. Show your work, explain mathemati
               <div className="w-full pb-32 md:pb-0">
                 {messages.map((message) => (
                   <ChatMessage
-                    key={`${message.id}-${message.metadata?.chartSpec ? 'chart' : 'text'}`}
+                    key={message.id}
                     role={message.role}
                     content={message.content}
                     fileName={message.file_name}
