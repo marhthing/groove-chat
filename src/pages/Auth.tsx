@@ -11,9 +11,10 @@ import { BRAND_NAME } from "@/lib/constants";
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [isResetPassword, setIsResetPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -50,7 +51,9 @@ const Auth = () => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const type = hashParams.get('type');
     if (type === 'recovery') {
-      setIsForgotPassword(true);
+      // User clicked the reset link from email
+      setIsResetPassword(true);
+      setIsForgotPassword(false);
       setIsLogin(false);
     }
   }, [navigate]);
@@ -68,8 +71,12 @@ const Auth = () => {
 
       toast({
         title: "Check your email",
-        description: "We've sent you a password reset link.",
+        description: "We've sent you a password reset link. Please check your inbox.",
       });
+      
+      // Go back to login view after sending reset email
+      setIsForgotPassword(false);
+      setIsLogin(true);
       setEmail("");
     } catch (error: any) {
       toast({
@@ -114,10 +121,10 @@ const Auth = () => {
 
       toast({
         title: "Success",
-        description: "Your password has been updated successfully.",
+        description: "Your password has been updated successfully. You can now sign in with your new password.",
       });
       
-      setIsForgotPassword(false);
+      setIsResetPassword(false);
       setIsLogin(true);
       setNewPassword("");
       setConfirmPassword("");
@@ -233,22 +240,26 @@ const Auth = () => {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>
-            {isForgotPassword
+            {isResetPassword
+              ? "Set New Password"
+              : isForgotPassword
               ? "Reset Password"
               : isLogin
               ? "Welcome Back"
               : "Create Account"}
           </CardTitle>
           <CardDescription>
-            {isForgotPassword
-              ? "Enter your new password"
+            {isResetPassword
+              ? "Enter your new password below"
+              : isForgotPassword
+              ? "Enter your email to receive a password reset link"
               : isLogin
               ? "Sign in to your account to continue"
               : `Sign up to start using ${BRAND_NAME}`}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isForgotPassword ? (
+          {isResetPassword ? (
             <form onSubmit={handleResetPassword} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="newPassword">New Password</Label>
@@ -276,6 +287,23 @@ const Auth = () => {
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Updating..." : "Update Password"}
+              </Button>
+            </form>
+          ) : isForgotPassword ? (
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="reset-email">Email</Label>
+                <Input
+                  id="reset-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="you@example.com"
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Sending..." : "Send Reset Link"}
               </Button>
             </form>
           ) : (
@@ -323,7 +351,7 @@ const Auth = () => {
             </form>
           )}
           
-          {!isForgotPassword && (
+          {!isForgotPassword && !isResetPassword && (
             <div className="mt-4 text-center text-sm">
               {isLogin ? "Don't have an account? " : "Already have an account? "}
               <button
@@ -343,8 +371,7 @@ const Auth = () => {
                 onClick={() => {
                   setIsForgotPassword(false);
                   setIsLogin(true);
-                  setNewPassword("");
-                  setConfirmPassword("");
+                  setEmail("");
                 }}
                 className="text-primary hover:underline font-medium"
               >
