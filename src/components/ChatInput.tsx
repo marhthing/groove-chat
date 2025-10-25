@@ -4,20 +4,19 @@ import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { FileAttachment, AttachedFile } from "./FileAttachment";
 import { VoiceRecorder } from "./VoiceRecorder";
-import { ChartTypeSelector, ChartType } from "./ChartTypeSelector";
 import { useToast } from "@/hooks/use-toast";
 
 interface ChatInputProps {
-  onSend: (message: string, file?: AttachedFile, chartType?: ChartType) => void;
+  onSend: (message: string, file?: AttachedFile) => void;
   disabled?: boolean;
   placeholder?: string;
   allowFileUpload?: boolean;
   selectedModel?: string;
 }
 
-export const ChatInput = ({ 
-  onSend, 
-  disabled, 
+export const ChatInput = ({
+  onSend,
+  disabled,
   placeholder = "Type your message...",
   allowFileUpload = true,
   selectedModel = "chat"
@@ -25,14 +24,13 @@ export const ChatInput = ({
   const [input, setInput] = useState("");
   const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
   const [isRecording, setIsRecording] = useState(false);
-  const [selectedChartType, setSelectedChartType] = useState<ChartType | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const getFileType = (file: File): AttachedFile['type'] => {
     const mimeType = file.type;
     const fileName = file.name.toLowerCase();
-    
+
     if (mimeType.startsWith('image/')) return 'image';
     if (mimeType === 'application/pdf') return 'pdf';
     if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return 'docx';
@@ -107,21 +105,11 @@ export const ChatInput = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (selectedModel === "chart-generation" && !selectedChartType) {
-      toast({
-        title: "Chart type required",
-        description: "Please select a chart type before sending",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+
     if ((input.trim() || attachedFile) && !disabled) {
-      onSend(input.trim(), attachedFile || undefined, selectedChartType || undefined);
+      onSend(input.trim(), attachedFile || undefined);
       setInput("");
       setAttachedFile(null);
-      setSelectedChartType(null);
     }
   };
 
@@ -149,14 +137,7 @@ export const ChatInput = ({
             onRemove={() => setAttachedFile(null)}
           />
         )}
-        
-        {selectedModel === "chart-generation" && (
-          <ChartTypeSelector
-            selectedType={selectedChartType}
-            onSelectType={setSelectedChartType}
-          />
-        )}
-        
+
         <div className="flex gap-2">
           {allowFileUpload && (
             <>
@@ -181,13 +162,13 @@ export const ChatInput = ({
               </Button>
             </>
           )}
-          
+
           <VoiceRecorder
             onTranscriptionComplete={handleVoiceTranscription}
             disabled={disabled}
             onRecordingStateChange={handleRecordingStateChange}
           />
-          
+
           {!isRecording && (
             <Textarea
               value={input}
@@ -199,9 +180,9 @@ export const ChatInput = ({
               data-testid="input-message"
             />
           )}
-          <Button 
-            type="submit" 
-            size="icon" 
+          <Button
+            type="submit"
+            size="icon"
             disabled={disabled || (!input.trim() && !attachedFile)}
             className="h-[50px] w-[50px] md:h-[60px] md:w-[60px] flex-shrink-0"
             data-testid="button-send"

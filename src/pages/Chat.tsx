@@ -43,6 +43,7 @@ const Chat = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState<string>("chat");
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
+  const [lastProcessedFile, setLastProcessedFile] = useState<ProcessedDocument | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -234,6 +235,7 @@ const Chat = () => {
     navigate("/chat");
     setCurrentConversationId(null);
     setMessages([]);
+    setLastProcessedFile(null);
     // Reset selected model to default when creating a new conversation
     setSelectedModel("chat");
   };
@@ -469,6 +471,9 @@ const Chat = () => {
   const handleChartGeneration = async (prompt: string, chartType: string, processedFile?: ProcessedDocument) => {
     if (!session) return;
 
+    // Use previously uploaded file if no new file provided
+    const fileToUse = processedFile || lastProcessedFile;
+
     try {
       let conversationId = currentConversationId;
       if (!conversationId) {
@@ -497,13 +502,18 @@ const Chat = () => {
         await loadConversations();
       }
 
+      // Store the file for future follow-ups
+      if (processedFile) {
+        setLastProcessedFile(processedFile);
+      }
+
       const userMessage: Message = {
         id: crypto.randomUUID(),
         role: "user",
-        content: `${prompt} (${chartType} chart)`,
+        content: prompt,
         created_at: new Date().toISOString(),
-        file_name: processedFile?.filename,
-        file_type: processedFile?.type,
+        file_name: fileToUse?.filename,
+        file_type: fileToUse?.type,
       };
       setMessages((prev) => [...prev, userMessage]);
 
@@ -512,16 +522,16 @@ const Chat = () => {
       await supabase.from("messages").insert({
         conversation_id: conversationId,
         role: "user",
-        content: `${prompt} (${chartType} chart)`,
-        file_name: processedFile?.filename,
-        file_type: processedFile?.type,
+        content: prompt,
+        file_name: fileToUse?.filename,
+        file_type: fileToUse?.type,
       });
 
       let chartSpec = null;
       let textContent = "Here's your chart:";
       
       // Check if we have structured data from an uploaded file
-      if (processedFile?.structuredData && processedFile.structuredData.columns.length > 0) {
+      if (fileToUse?.structuredData && fileToUse.structuredData.columns.length > 0) {
         const { columns, rows } = processedFile.structuredData;
         
         // Parse the prompt to extract column names using token-based matching
@@ -646,7 +656,7 @@ const Chat = () => {
         chartSpec = {
           type: chartType,
           title: `${columns[yColumn]} vs ${columns[xColumn]}`,
-          description: `Chart from ${processedFile.filename}`,
+          description: `Chart from ${fileToUse.filename}`,
           xAxis: {
             label: columns[xColumn]
           },
@@ -661,7 +671,7 @@ const Chat = () => {
           ]
         };
         
-        textContent = `Here's your chart from ${processedFile.filename} showing ${columns[yColumn]} vs ${columns[xColumn]}:`;
+        textContent = `Here's your chart from ${fileToUse.filename} showing ${columns[yColumn]} vs ${columns[xColumn]}:`;
       } else {
         // No file data - use AI to generate sample data
         const apiKey = import.meta.env.VITE_GROQ_API_KEY;
@@ -748,7 +758,7 @@ Important:
 
       const metadata = {
         chartSpec,
-        rawModelResponse: processedFile ? `Generated from file: ${processedFile.filename}` : '',
+        rawModelResponse: fileToUse ? `Generated from file: ${fileToUse.filename}` : '',
       };
 
       const assistantMessage: Message = {
@@ -789,7 +799,7 @@ Important:
     }
   };
 
-  const sendMessage = async (content: string, file?: AttachedFile, chartType?: string) => {
+  const sendMessage = async (content: string, file?: AttachedFile) => {
     if (!session) return;
 
     setIsLoading(true);
@@ -810,7 +820,7 @@ Important:
     }
 
     // Handle chart generation
-    if (modelToUse === "chart-generation" && chartType) {
+    if (modelToUse === "chart-generation") {
       // Process file if attached
       let processedFile: ProcessedDocument | undefined = undefined;
       if (file) {
@@ -827,7 +837,17 @@ Important:
         }
       }
       
-      await handleChartGeneration(content, chartType, processedFile);
+      // Detect chart type from prompt
+      const lowerContent = content.toLowerCase();
+      let detectedChartType = "bar"; // default
+      
+      if (lowerContent.includes("pie")) detectedChartType = "pie";
+      else if (lowerContent.includes("line")) detectedChartType = "line";
+      else if (lowerContent.includes("scatter")) detectedChartType = "scatter";
+      else if (lowerContent.includes("area")) detectedChartType = "area";
+      else if (lowerContent.includes("bar")) detectedChartType = "bar";
+      
+      await handleChartGeneration(content, detectedChartType, processedFile);
       return;
     }
 
