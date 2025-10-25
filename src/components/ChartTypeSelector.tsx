@@ -38,7 +38,11 @@ export const ChartTypeSelector = ({ selectedType, onSelectType }: ChartTypeSelec
           variant="ghost"
           size="sm"
           className="h-6 w-6 p-0"
-          onClick={() => setIsExpanded(!isExpanded)}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsExpanded(!isExpanded);
+          }}
         >
           {isExpanded ? (
             <ChevronUp className="h-4 w-4" />
