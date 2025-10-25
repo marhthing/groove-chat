@@ -12,12 +12,12 @@ import "katex/dist/katex.min.css";
 marked.use(markedKatex({
   throwOnError: false,
   output: 'html',
-  delimiters: [
-    { left: "$$", right: "$$", display: true },
-    { left: "$", right: "$", display: false },
-    { left: "\\[", right: "\\]", display: true },
-    { left: "\\(", right: "\\)", display: false }
-  ]
+  displayMode: false,
+  trust: false,
+  strict: false,
+  macros: {
+    "'": "'"
+  }
 }));
 
 marked.setOptions({
@@ -96,7 +96,7 @@ export const ChatMessage = ({ role, content, fileName, fileType }: ChatMessagePr
       const htmlContent = marked.parse(text, { async: false }) as string;
       return (
         <div 
-          className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none prose-p:mb-4 prose-headings:mb-3 prose-headings:mt-6 prose-ul:my-4 prose-ol:my-4 prose-li:my-1 [&_.katex]:text-inherit [&_.katex-display]:my-4 prose-table:border-collapse prose-table:w-full prose-th:border prose-th:border-gray-300 dark:prose-th:border-gray-700 prose-th:px-4 prose-th:py-2 prose-th:bg-gray-100 dark:prose-th:bg-gray-800 prose-td:border prose-td:border-gray-300 dark:prose-td:border-gray-700 prose-td:px-4 prose-td:py-2"
+          className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none prose-p:mb-4 prose-headings:mb-3 prose-headings:mt-6 prose-ul:my-4 prose-ol:my-4 prose-li:my-1 [&_.katex]:text-inherit [&_.katex]:overflow-x-auto [&_.katex]:overflow-y-hidden [&_.katex-display]:my-4 [&_.katex-display]:overflow-x-auto [&_.katex-display]:overflow-y-hidden [&_.katex-display>.katex]:whitespace-normal prose-table:border-collapse prose-table:w-full prose-th:border prose-th:border-gray-300 dark:prose-th:border-gray-700 prose-th:px-4 prose-th:py-2 prose-th:bg-gray-100 dark:prose-th:bg-gray-800 prose-td:border prose-td:border-gray-300 dark:prose-td:border-gray-700 prose-td:px-4 prose-td:py-2"
           dangerouslySetInnerHTML={{ __html: htmlContent }}
         />
       );

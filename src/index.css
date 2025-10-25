@@ -125,4 +125,30 @@ All colors MUST be HSL.
     margin-top: 0.25em;
     margin-bottom: 0.25em;
   }
+
+  /* KaTeX math rendering fixes */
+  .katex {
+    font-size: 1.05em !important;
+  }
+
+  .katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.5em 0;
+  }
+
+  .katex-display > .katex {
+    white-space: normal;
+    text-align: center;
+  }
+
+  /* Fix for inline math spacing */
+  .katex-html {
+    white-space: nowrap;
+  }
+
+  /* Ensure math formulas are visible in both themes */
+  .dark .katex {
+    color: inherit;
+  }
 }
