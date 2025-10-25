@@ -1,1 +1,1 @@
-export const BRAND_NAME = "Groove AI";
+export const BRAND_NAME = "Maroq AI";
