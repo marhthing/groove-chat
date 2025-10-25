@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Session } from "@supabase/supabase-js";
 import { BRAND_NAME } from "@/lib/constants";
 import { AttachedFile } from "@/components/FileAttachment";
-import { processFileUpload, createFileMessageContent } from "@/lib/fileUploadHelper";
+import { processFileUpload, createFileMessageContent, ProcessedDocument, StructuredData } from "@/lib/fileUploadHelper";
 
 interface Message {
   id: string;
@@ -463,7 +463,7 @@ const Chat = () => {
     }
   };
 
-  const handleChartGeneration = async (prompt: string, chartType: string) => {
+  const handleChartGeneration = async (prompt: string, chartType: string, processedFile?: ProcessedDocument) => {
     if (!session) return;
 
     try {
@@ -510,12 +510,159 @@ const Chat = () => {
         content: `${prompt} (${chartType} chart)`,
       });
 
-      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
-      if (!apiKey) {
-        throw new Error("Service temporary unavailable.");
-      }
+      let chartSpec = null;
+      let textContent = "Here's your chart:";
+      
+      // Check if we have structured data from an uploaded file
+      if (processedFile?.structuredData && processedFile.structuredData.columns.length > 0) {
+        const { columns, rows } = processedFile.structuredData;
+        
+        // Parse the prompt to extract column names using token-based matching
+        // This approach avoids regex complexity and handles all special characters
+        const mentionedColumns: string[] = [];
+        
+        // Normalize: convert to lowercase and split into tokens
+        const normalizeText = (text: string) => 
+          text.toLowerCase()
+            .replace(/[""'']/g, '') // Remove quotes
+            .split(/[\s,;:.!?()\\[\]{}]+/) // Split on whitespace and punctuation
+            .filter(t => t.length > 0);
+        
+        const promptTokens = normalizeText(prompt);
+        
+        // Find all matching columns with their match positions and lengths
+        const matches: Array<{ col: string; position: number; length: number }> = [];
+        
+        for (const col of columns) {
+          if (!col) continue;
+          
+          const colTokens = normalizeText(col);
+          if (colTokens.length === 0) continue;
+          
+          // For single-token columns - find ALL occurrences
+          if (colTokens.length === 1) {
+            for (let i = 0; i < promptTokens.length; i++) {
+              if (promptTokens[i] === colTokens[0]) {
+                matches.push({ col, position: i, length: 1 });
+              }
+            }
+          } else {
+            // For multi-token columns - find ALL consecutive appearances
+            for (let i = 0; i <= promptTokens.length - colTokens.length; i++) {
+              let match = true;
+              for (let j = 0; j < colTokens.length; j++) {
+                if (promptTokens[i + j] !== colTokens[j]) {
+                  match = false;
+                  break;
+                }
+              }
+              if (match) {
+                matches.push({ col, position: i, length: colTokens.length });
+              }
+            }
+          }
+        }
+        
+        // Sort matches: prefer longer matches (more specific), then by position
+        matches.sort((a, b) => {
+          if (b.length !== a.length) return b.length - a.length;
+          return a.position - b.position;
+        });
+        
+        // Remove overlapping matches - keep the longer/more specific ones
+        const selectedMatches: typeof matches = [];
+        const usedPositions = new Set<number>();
+        
+        for (const match of matches) {
+          let overlaps = false;
+          for (let i = 0; i < match.length; i++) {
+            if (usedPositions.has(match.position + i)) {
+              overlaps = true;
+              break;
+            }
+          }
+          
+          if (!overlaps) {
+            selectedMatches.push(match);
+            for (let i = 0; i < match.length; i++) {
+              usedPositions.add(match.position + i);
+            }
+          }
+        }
+        
+        // Extract column names in the order they appeared in the prompt
+        selectedMatches.sort((a, b) => a.position - b.position);
+        mentionedColumns.push(...selectedMatches.map(m => m.col));
+        
+        // Determine which columns to use
+        let xColumn = 0;
+        let yColumn = 1;
+        
+        if (mentionedColumns.length >= 2) {
+          xColumn = columns.indexOf(mentionedColumns[0]);
+          yColumn = columns.indexOf(mentionedColumns[1]);
+          
+          // Validate we found distinct columns
+          if (xColumn === yColumn) {
+            toast({
+              title: "Error",
+              description: "Please specify two different columns to plot",
+              variant: "destructive",
+            });
+            setIsLoading(false);
+            return;
+          }
+        } else if (mentionedColumns.length === 1) {
+          // Only one column mentioned - use first column as X, mentioned as Y
+          xColumn = 0;
+          yColumn = columns.indexOf(mentionedColumns[0]);
+          if (yColumn === 0) yColumn = 1; // Avoid same column
+        }
+        
+        // Validate columns exist and are different
+        if (xColumn === yColumn || xColumn >= columns.length || yColumn >= columns.length) {
+          toast({
+            title: "Error",
+            description: `Could not identify columns. Available columns: ${columns.join(', ')}`,
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+        
+        // Build the chart data from file
+        const chartData = rows.map(row => ({
+          x: row[xColumn] !== undefined ? row[xColumn] : '',
+          y: typeof row[yColumn] === 'number' ? row[yColumn] : parseFloat(String(row[yColumn])) || 0
+        }));
+        
+        chartSpec = {
+          type: chartType,
+          title: `${columns[yColumn]} vs ${columns[xColumn]}`,
+          description: `Chart from ${processedFile.filename}`,
+          xAxis: {
+            label: columns[xColumn]
+          },
+          yAxis: {
+            label: columns[yColumn]
+          },
+          datasets: [
+            {
+              label: columns[yColumn],
+              data: chartData
+            }
+          ]
+        };
+        
+        textContent = `Here's your chart from ${processedFile.filename} showing ${columns[yColumn]} vs ${columns[xColumn]}:`;
+      } else {
+        // No file data - use AI to generate sample data
+        const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+        if (!apiKey) {
+          throw new Error("Service temporary unavailable.");
+        }
 
-      const chartPrompt = `You are a data visualization assistant. Generate a ${chartType} chart based on this request: "${prompt}"
+        const chartPrompt = `You are a data visualization assistant. Generate a ${chartType} chart based on this request: "${prompt}"
 
 Return ONLY a valid JSON object in this exact format (no other text):
 {
@@ -546,57 +693,55 @@ Important:
 - Include realistic sample data based on the request
 - Return ONLY the JSON object, no markdown formatting or code blocks`;
 
-      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: [
-            {
-              role: "user",
-              content: chartPrompt
-            }
-          ],
-          temperature: 0.3,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Chart generation failed");
-      }
-
-      const data = await response.json();
-      const assistantMessageId = crypto.randomUUID();
-
-      const messageContent = data.choices[0]?.message?.content || "";
-      
-      let chartSpec = null;
-      let textContent = "Here's your chart:";
-      
-      try {
-        const jsonMatch = messageContent.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          chartSpec = JSON.parse(jsonMatch[0]);
-        } else {
-          chartSpec = JSON.parse(messageContent);
-        }
-      } catch (parseError) {
-        console.error("Failed to parse chart JSON:", parseError);
-        toast({
-          title: "Error",
-          description: "Failed to generate chart data. Please try again.",
-          variant: "destructive",
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "llama-3.3-70b-versatile",
+            messages: [
+              {
+                role: "user",
+                content: chartPrompt
+              }
+            ],
+            temperature: 0.3,
+          }),
         });
-        setIsLoading(false);
-        return;
+
+        if (!response.ok) {
+          throw new Error("Chart generation failed");
+        }
+
+        const data = await response.json();
+        const messageContent = data.choices[0]?.message?.content || "";
+        
+        try {
+          const jsonMatch = messageContent.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            chartSpec = JSON.parse(jsonMatch[0]);
+          } else {
+            chartSpec = JSON.parse(messageContent);
+          }
+        } catch (parseError) {
+          console.error("Failed to parse chart JSON:", parseError);
+          toast({
+            title: "Error",
+            description: "Failed to generate chart data. Please try again.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
       }
+      
+      const assistantMessageId = crypto.randomUUID();
 
       const metadata = {
         chartSpec,
-        rawModelResponse: messageContent,
+        rawModelResponse: processedFile ? `Generated from file: ${processedFile.filename}` : '',
       };
 
       const assistantMessage: Message = {
@@ -655,7 +800,23 @@ Important:
 
     // Handle chart generation
     if (modelToUse === "chart-generation" && chartType) {
-      await handleChartGeneration(content, chartType);
+      // Process file if attached
+      let processedFile: ProcessedDocument | undefined = undefined;
+      if (file) {
+        try {
+          processedFile = await processFileUpload(file);
+        } catch (error) {
+          toast({
+            title: "Error",
+            description: "Failed to process uploaded file",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+      }
+      
+      await handleChartGeneration(content, chartType, processedFile);
       return;
     }
 
@@ -1110,7 +1271,7 @@ Remember: Precision and clarity are paramount. Show your work and explain mathem
             if (data === "[DONE]") continue;
 
             try {
-              const parsed = JSON.JSON.parse(data);
+              const parsed = JSON.parse(data);
               const content = parsed.choices?.[0]?.delta?.content;
               if (content) {
                 assistantContent += content;

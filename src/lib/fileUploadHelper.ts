@@ -10,11 +10,17 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url
 ).toString();
 
+export interface StructuredData {
+  columns: string[]; // Column headers
+  rows: (string | number)[][]; // Array of rows, each row is an array of values
+}
+
 export interface ProcessedDocument {
   type: 'image' | 'pdf' | 'docx' | 'excel' | 'csv' | 'other';
   filename: string;
   data?: string; // base64 for images
   text?: string; // extracted text for documents
+  structuredData?: StructuredData; // For CSV/Excel files
   mimeType?: string;
   storageUrl?: string; // URL from Supabase Storage
 }
@@ -220,6 +226,43 @@ async function extractDocxText(file: File): Promise<string> {
 }
 
 /**
+ * Extract structured data from Excel
+ */
+async function extractExcelStructuredData(file: File): Promise<StructuredData | null> {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+    
+    // Use the first sheet
+    const firstSheetName = workbook.SheetNames[0];
+    if (!firstSheetName) return null;
+    
+    const worksheet = workbook.Sheets[firstSheetName];
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+    
+    if (jsonData.length === 0) return null;
+    
+    // First row is headers
+    const columns = (jsonData[0] as any[]).map(col => String(col || ''));
+    
+    // Rest are data rows - limit to 10000 rows for performance
+    const rows = jsonData.slice(1, 10001).map(row => 
+      (row as any[]).map(cell => {
+        // Try to parse as number if possible
+        const val = String(cell || '');
+        const num = parseFloat(val);
+        return isNaN(num) ? val : num;
+      })
+    );
+    
+    return { columns, rows };
+  } catch (error) {
+    console.error('Error parsing Excel structured data:', error);
+    return null;
+  }
+}
+
+/**
  * Extract text from Excel with intelligent adaptive truncation
  */
 async function extractExcelText(file: File): Promise<string> {
@@ -341,6 +384,58 @@ async function extractExcelText(file: File): Promise<string> {
   });
 
   return text;
+}
+
+/**
+ * Extract structured data from CSV
+ */
+async function extractCsvStructuredData(file: File): Promise<StructuredData | null> {
+  try {
+    const text = await file.text();
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    
+    if (lines.length === 0) return null;
+    
+    // Parse CSV - simple comma splitting (you might want a proper CSV parser for complex cases)
+    const parseCSVLine = (line: string): string[] => {
+      const result: string[] = [];
+      let current = '';
+      let inQuotes = false;
+      
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current.trim());
+      return result;
+    };
+    
+    // First line is headers
+    const columns = parseCSVLine(lines[0]);
+    
+    // Rest are data rows - limit to 10000 rows for performance
+    const rows = lines.slice(1, 10001).map(line => {
+      const values = parseCSVLine(line);
+      return values.map(val => {
+        // Try to parse as number if possible
+        const num = parseFloat(val);
+        return isNaN(num) ? val : num;
+      });
+    });
+    
+    return { columns, rows };
+  } catch (error) {
+    console.error('Error parsing CSV structured data:', error);
+    return null;
+  }
 }
 
 /**
@@ -495,8 +590,9 @@ export async function processFileUpload(
       };
     }
 
-    // For documents, extract text
+    // For documents, extract text and structured data
     let extractedText = '';
+    let structuredData: StructuredData | null | undefined = undefined;
 
     if (type === 'pdf') {
       extractedText = await extractPdfText(uploadFile);
@@ -504,8 +600,10 @@ export async function processFileUpload(
       extractedText = await extractDocxText(uploadFile);
     } else if (type === 'excel') {
       extractedText = await extractExcelText(uploadFile);
+      structuredData = await extractExcelStructuredData(uploadFile);
     } else if (type === 'csv') {
       extractedText = await extractCsvText(uploadFile);
+      structuredData = await extractCsvStructuredData(uploadFile);
     }
 
     // Upload to Supabase Storage
@@ -526,6 +624,7 @@ export async function processFileUpload(
       type,
       filename: uploadFile.name,
       text: extractedText,
+      structuredData: structuredData || undefined,
       mimeType: uploadFile.type,
       storageUrl: publicUrl
     };
