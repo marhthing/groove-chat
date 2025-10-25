@@ -84,9 +84,9 @@ const Explore = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Chat
           </Button>
-          <h1 className="text-4xl font-bold mb-2">Explore GPTs</h1>
+          <h1 className="text-4xl font-bold mb-2">Explore AI Models</h1>
           <p className="text-muted-foreground">
-            Discover specialized AI models for different tasks
+            Discover specialized AI assistants for different tasks
           </p>
         </div>
 
