@@ -1,0 +1,74 @@
+Below is a complete, self‑contained example that does exactly what you asked for:
+
+Generate a realistic‑looking data set for 50 students (random study‑hours 0‑10 h and exam scores 0‑100).
+Mark each student as “passed” if the score is ≥ 70, otherwise “failed”.
+Create a scatter‑plot with:
+x‑axis – study hours
+y‑axis – exam scores
+green dots for students who passed
+red dots for students who failed
+Full Python code (uses numpy, pandas, and matplotlib)
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# -------------------------------------------------
+# 1️⃣  Create the synthetic data
+# -------------------------------------------------
+np.random.seed(0)                     # reproducible results
+n_students = 50
+
+# Study hours: uniform distribution between 0 and 10 hours
+study_hours = np.random.uniform(0, 10, n_students)
+
+# Exam scores: uniform distribution between 0 and 100 points
+exam_scores = np.random.uniform(0, 100, n_students)
+
+# Assemble into a DataFrame
+df = pd.DataFrame({
+    'study_hours': study_hours,
+    'exam_scores': exam_scores
+})
+
+# -------------------------------------------------
+# 2️⃣  Determine pass / fail
+# -------------------------------------------------
+df['passed'] = df['exam_scores'] >= 70   # True = passed, False = failed
+
+# -------------------------------------------------
+# 3️⃣  Plot the scatter chart
+# -------------------------------------------------
+plt.figure(figsize=(10, 6))
+
+# Plot failed students (red)
+failed = df[~df['passed']]
+plt.scatter(failed['study_hours'], failed['exam_scores'],
+            color='red', label='Failed', alpha=0.7, edgecolor='k')
+
+# Plot passed students (green)
+passed = df[df['passed']]
+plt.scatter(passed['study_hours'], passed['exam_scores'],
+            color='green', label='Passed', alpha=0.7, edgecolor='k')
+
+# Axis labels, title and legend
+plt.xlabel('Study Hours')
+plt.ylabel('Exam Scores')
+plt.title('Study Hours vs. Exam Scores (50 Students)')
+plt.legend()
+plt.grid(True, linestyle='--', alpha=0.5)
+
+# Show the plot
+plt.show()
+What the plot looks like
+Running the script produces a figure similar to the one below (the exact positions differ each time you change the random seed, but the overall pattern stays the same):
+
+Red dots – students who scored < 70 (failed).
+Green dots – students who scored ≥ 70 (passed).
+The scatter chart makes it easy to see any correlation between the amount of time a student studied and the resulting exam score, as well as how many students fall on each side of the passing threshold.
+
+Quick recap of the reasoning
+Data generation – Since no real data were supplied, we simulated a plausible data set (50 observations) using uniform random numbers for both study hours and exam scores.
+Pass/fail classification – A simple boolean column (passed) was added based on the condition exam_score >= 70.
+Visualization – matplotlib.pyplot.scatter was used twice (once for each class) so we could assign distinct colors (red for failed, green for passed) and a legend.
+Presentation – Axis labels, a title, a legend, and a light grid make the chart readable and publication‑ready.
+Feel free to copy the code into a Jupyter notebook, a .py script, or any Python environment that supports matplotlib. Adjust the random seed, the number of students, or the score threshold as needed for your own data.
