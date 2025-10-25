@@ -1,7 +1,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Sparkles, ImageIcon, Search, Brain, Globe, Calculator } from "lucide-react";
+import { ArrowLeft, Sparkles, ImageIcon, Search, Brain, Globe, Calculator, BarChart } from "lucide-react";
 import { BRAND_NAME } from "@/lib/constants";
 
 interface AIModel {
@@ -29,6 +29,13 @@ const Explore = () => {
       description: "Create stunning images from text descriptions",
       icon: <ImageIcon className="h-6 w-6" />,
       color: "from-purple-500 to-pink-500"
+    },
+    {
+      id: "chart-generation",
+      name: "Chart Generation",
+      description: "Generate data visualizations and charts from natural language descriptions",
+      icon: <BarChart className="h-6 w-6" />,
+      color: "from-amber-500 to-yellow-500"
     },
     {
       id: "research-assistant",
