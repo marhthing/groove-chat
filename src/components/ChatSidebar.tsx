@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Plus, MessageSquare, LogOut, MoreVertical, Trash2, Edit2, Settings, ImageIcon, Sparkles, Search, Brain, Globe, User, Calculator } from "lucide-react";
+import { Plus, MessageSquare, LogOut, MoreVertical, Trash2, Edit2, Settings, ImageIcon, Sparkles, Search, Brain, Globe, User, Calculator, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
@@ -159,6 +159,7 @@ export const ChatSidebar = ({
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
   const [newTitle, setNewTitle] = useState("");
   const [topModels, setTopModels] = useState<Array<{id: string, count: number}>>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Calculate top 3 most used models
   useEffect(() => {
@@ -176,6 +177,11 @@ export const ChatSidebar = ({
 
     setTopModels(sortedModels);
   }, [conversations]);
+
+  // Filter conversations based on search query
+  const filteredConversations = conversations.filter(conv =>
+    conv.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -243,6 +249,25 @@ export const ChatSidebar = ({
           <Plus className="h-4 w-4" />
           New Chat
         </Button>
+        
+        <div className="relative mt-3">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search chats"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 pr-9 h-9 bg-sidebar-accent/50"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       <Separator />
@@ -336,10 +361,15 @@ export const ChatSidebar = ({
         {/* Chats Section */}
         <div className="py-4">
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-3">
-            Chats
+            Chats {searchQuery && `(${filteredConversations.length})`}
           </h2>
           <div className="space-y-1">
-            {conversations.map((conv) => (
+            {filteredConversations.length === 0 && searchQuery ? (
+              <div className="text-center py-8 px-3">
+                <p className="text-sm text-muted-foreground">No chats found</p>
+              </div>
+            ) : (
+              filteredConversations.map((conv) => (
               <div
                 key={conv.id}
                 className={`group relative rounded-lg transition-colors ${
@@ -396,7 +426,8 @@ export const ChatSidebar = ({
                   </DropdownMenu>
                 </div>
               </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </ScrollArea>
