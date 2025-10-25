@@ -21,7 +21,19 @@ const Auth = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if user is already logged in
+    // Check for password recovery hash in URL first
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = hashParams.get('type');
+    
+    if (type === 'recovery') {
+      // User clicked the reset link from email - don't auto-login
+      setIsResetPassword(true);
+      setIsForgotPassword(false);
+      setIsLogin(false);
+      return; // Exit early to prevent auto-login
+    }
+
+    // Only check for existing session if not in password recovery mode
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -46,16 +58,6 @@ const Auth = () => {
       }
     };
     checkUser();
-
-    // Check for password recovery hash in URL
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const type = hashParams.get('type');
-    if (type === 'recovery') {
-      // User clicked the reset link from email
-      setIsResetPassword(true);
-      setIsForgotPassword(false);
-      setIsLogin(false);
-    }
   }, [navigate]);
 
   const handleForgotPassword = async (e: React.FormEvent) => {
