@@ -41,6 +41,7 @@ interface Conversation {
   id: string;
   title: string;
   updated_at: string;
+  model_type?: string;
 }
 
 interface UserProfileDropdownProps {
@@ -368,7 +369,7 @@ export const ChatSidebar = ({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 flex-shrink-0"
+                        className="h-8 w-8 flex-shrink-0 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                         onClick={(e) => e.stopPropagation()}
                         data-testid={`button-options-${conv.id}`}
                       >
