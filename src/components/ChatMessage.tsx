@@ -195,23 +195,23 @@ export const ChatMessage = ({ role, content, fileName, fileType, imageUrl, isStr
 
   return (
     <div className={`w-full py-2 ${isUser ? "bg-background" : "bg-muted/30"}`} data-testid={`message-${role}`}>
-      <div className="w-full max-w-5xl mx-auto px-3">
+      <div className="w-full max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto px-2 sm:px-3 md:px-4">
         {isUser ? (
           // User message - right aligned
           <div className="flex gap-2 md:gap-3 justify-end">
-            <div className="flex flex-col items-end space-y-1 max-w-[85%]">
+            <div className="flex flex-col items-end space-y-1 max-w-[75%] sm:max-w-[80%] md:max-w-[85%]">
               <p className="text-xs font-medium text-muted-foreground">You</p>
-              <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-3 py-2 shadow-sm w-fit overflow-hidden">
+              <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-3 py-2 shadow-sm w-fit max-w-full overflow-hidden break-words">
                 {fileName && (
                   <Badge variant="secondary" className="mb-2 gap-1">
                     {getFileIcon()}
-                    <span className="text-xs truncate max-w-[200px]">{fileName}</span>
+                    <span className="text-xs truncate max-w-[150px] sm:max-w-[200px]">{fileName}</span>
                   </Badge>
                 )}
                 {renderContent(content)}
               </div>
             </div>
-            <Avatar className="flex-shrink-0 w-8 h-8">
+            <Avatar className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8">
               <AvatarImage src={profilePicture || undefined} />
               <AvatarFallback className="bg-primary text-primary-foreground text-xs">{userInitials}</AvatarFallback>
             </Avatar>
@@ -219,13 +219,13 @@ export const ChatMessage = ({ role, content, fileName, fileType, imageUrl, isStr
         ) : (
           // AI message - left aligned
           <div className="flex gap-2 md:gap-3 justify-start">
-            <Avatar className="flex-shrink-0 w-8 h-8">
+            <Avatar className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8">
               <AvatarImage src="/ai.jpg" alt={BRAND_NAME} />
               <AvatarFallback className="bg-accent text-accent-foreground text-xs">AI</AvatarFallback>
             </Avatar>
-            <div className="flex flex-col space-y-1 min-w-0 max-w-[85%]">
+            <div className="flex flex-col space-y-1 min-w-0 max-w-[75%] sm:max-w-[80%] md:max-w-[85%]">
               <p className="text-xs font-medium text-muted-foreground">{BRAND_NAME}</p>
-              <div className="bg-card border border-border rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm w-fit overflow-hidden">
+              <div className="bg-card border border-border rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm w-fit max-w-full overflow-hidden break-words">
                 {renderContent(content)}
               </div>
             </div>
