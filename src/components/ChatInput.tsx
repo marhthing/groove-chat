@@ -3,6 +3,7 @@ import { Send, Paperclip } from "lucide-react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { FileAttachment, AttachedFile } from "./FileAttachment";
+import { VoiceRecorder } from "./VoiceRecorder";
 import { useToast } from "@/hooks/use-toast";
 
 interface ChatInputProps {
@@ -115,6 +116,10 @@ export const ChatInput = ({
     }
   };
 
+  const handleVoiceTranscription = (transcribedText: string) => {
+    setInput(transcribedText);
+  };
+
   return (
     <form onSubmit={handleSubmit} className="border-t border-border bg-background p-2 md:p-3 safe-bottom">
       <div className="max-w-4xl mx-auto space-y-2">
@@ -149,6 +154,11 @@ export const ChatInput = ({
               </Button>
             </>
           )}
+          
+          <VoiceRecorder
+            onTranscriptionComplete={handleVoiceTranscription}
+            disabled={disabled}
+          />
           
           <Textarea
             value={input}
