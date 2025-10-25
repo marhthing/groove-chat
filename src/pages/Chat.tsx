@@ -901,9 +901,10 @@ Important:
         role: "assistant",
         content: textContent,
         created_at: new Date().toISOString(),
-        metadata,
+        metadata: metadata, // Ensure metadata is explicitly set
       };
 
+      // Add message to state immediately so chart renders right away
       setMessages((prev) => [...prev, assistantMessage]);
       
       // Multiple scroll attempts to ensure chart is visible
@@ -1651,7 +1652,7 @@ Remember: Precision and clarity are paramount. Show your work, explain mathemati
               <div className="w-full pb-32 md:pb-0">
                 {messages.map((message) => (
                   <ChatMessage
-                    key={message.id}
+                    key={`${message.id}-${message.metadata?.chartSpec ? 'chart' : 'text'}`}
                     role={message.role}
                     content={message.content}
                     fileName={message.file_name}

@@ -35,7 +35,7 @@ export const ChatMessage = ({ role, content, fileName, fileType, imageUrl, isStr
   const isUser = role === "user";
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [userInitials, setUserInitials] = useState("U");
-  
+
   const chartMetadata = metadata as ChartMetadata | undefined;
 
   const getFileIcon = () => {
@@ -111,7 +111,7 @@ export const ChatMessage = ({ role, content, fileName, fileType, imageUrl, isStr
     tables.forEach((table) => {
       const headers: string[] = [];
       const headerCells = table.querySelectorAll('thead th');
-      
+
       headerCells.forEach((th) => {
         headers.push(th.textContent?.trim() || '');
       });
@@ -146,13 +146,13 @@ export const ChatMessage = ({ role, content, fileName, fileType, imageUrl, isStr
         </div>
       );
     }
-    
+
     // Check for imageUrl prop (for generated images)
     if (imageUrl) {
       // Handle both data URLs and regular URLs
       const isDataUrl = imageUrl.startsWith('data:');
       const isHttpUrl = imageUrl.startsWith('http://') || imageUrl.startsWith('https://');
-      
+
       if (isDataUrl || isHttpUrl) {
         return (
           <div className="space-y-2">
@@ -175,7 +175,7 @@ export const ChatMessage = ({ role, content, fileName, fileType, imageUrl, isStr
         );
       }
     }
-    
+
     // Check for markdown image format
     const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/;
     const match = text.match(imageRegex);
@@ -184,7 +184,7 @@ export const ChatMessage = ({ role, content, fileName, fileType, imageUrl, isStr
       const markdownImageUrl = match[2];
       const isDataUrl = markdownImageUrl.startsWith('data:');
       const isHttpUrl = markdownImageUrl.startsWith('http://') || markdownImageUrl.startsWith('https://');
-      
+
       if (isDataUrl || isHttpUrl) {
         return (
           <img 
