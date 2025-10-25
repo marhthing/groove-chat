@@ -174,6 +174,27 @@ All colors MUST be HSL.
     background-color: hsl(var(--muted) / 0.3);
   }
 
+  /* Link styling - make links blue and easily identifiable */
+  .prose a {
+    color: #3b82f6;
+    text-decoration: underline;
+    font-weight: 500;
+    transition: color 0.2s ease;
+  }
+
+  .prose a:hover {
+    color: #2563eb;
+    text-decoration: underline;
+  }
+
+  .dark .prose a {
+    color: #60a5fa;
+  }
+
+  .dark .prose a:hover {
+    color: #93c5fd;
+  }
+
   /* KaTeX math rendering fixes */
   .katex {
     font-size: 1.05em !important;
