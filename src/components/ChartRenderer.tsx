@@ -102,10 +102,10 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ spec }) => {
   // Responsive dimensions
   const chartHeight = isMobile ? 280 : 400;
   const chartMargin = isMobile 
-    ? { top: 10, right: 10, left: -10, bottom: 20 } 
+    ? { top: 10, right: 5, left: -15, bottom: 20 } 
     : { top: 5, right: 30, left: 20, bottom: 5 };
-  const pieRadius = isMobile ? 60 : 120;
-  const pieInnerRadius = isMobile ? 30 : 0;
+  const pieRadius = isMobile ? 70 : 120;
+  const pieInnerRadius = isMobile ? 35 : 0;
 
   const downloadChart = async () => {
     if (!chartRef.current) return;
@@ -423,7 +423,7 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ spec }) => {
           Download
         </Button>
       </div>
-      <div ref={chartRef} className="rounded-lg border border-border p-2 sm:p-4 bg-card overflow-x-auto overflow-y-hidden">
+      <div ref={chartRef} className="rounded-lg border border-border p-1 sm:p-4 bg-card overflow-x-auto overflow-y-hidden">
         {renderChart()}
       </div>
     </div>
