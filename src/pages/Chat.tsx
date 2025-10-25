@@ -439,12 +439,17 @@ const Chat = () => {
       // Force scroll after adding image
       setTimeout(() => scrollToBottom(), 100);
 
-      // Save assistant message with image_url to database
+      // Save assistant message with image_url to database, including metadata
       await supabase.from("messages").insert({
         conversation_id: conversationId,
         role: "assistant",
         content: "Generated image",
         image_url: imageUrl,
+        // Add metadata here, specifically author/name
+        metadata: {
+          author: BRAND_NAME,
+          name: BRAND_NAME
+        }
       });
     } catch (error: any) {
       toast({
@@ -534,7 +539,7 @@ const Chat = () => {
 
       const data = await response.json();
       const assistantMessageId = crypto.randomUUID();
-      
+
       // Extract content from the response
       const messageContent = data.choices[0]?.message?.content;
       let chartImageUrl = "";
