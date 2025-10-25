@@ -34,7 +34,7 @@ import {
 } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { Sheet, SheetContent } from "./ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from "./ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 interface Conversation {
@@ -444,10 +444,10 @@ export const ChatSidebar = ({
       {/* Mobile Sheet */}
       <Sheet open={isOpen} onOpenChange={onToggle}>
         <SheetContent side="left" className="p-0 w-72 bg-sidebar">
-          <div className="sr-only">
-            <h2>Navigation Menu</h2>
-            <p>Access your conversations, models, and settings</p>
-          </div>
+          <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+          <SheetDescription className="sr-only">
+            Access your conversations, models, and settings
+          </SheetDescription>
           {sidebarContent}
         </SheetContent>
       </Sheet>
