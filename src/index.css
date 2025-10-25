@@ -155,17 +155,19 @@ All colors MUST be HSL.
     border-collapse: collapse;
     width: 100%;
     margin: 1em 0;
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    display: table;
   }
 
-  .prose thead,
-  .prose tbody,
+  .prose thead {
+    display: table-header-group;
+  }
+
+  .prose tbody {
+    display: table-row-group;
+  }
+
   .prose tr {
-    display: table;
-    width: 100%;
-    table-layout: fixed;
+    display: table-row;
   }
 
   .prose th {
@@ -174,6 +176,7 @@ All colors MUST be HSL.
     background-color: hsl(var(--muted));
     font-weight: 600;
     text-align: left;
+    display: table-cell;
   }
 
   .prose td {
@@ -181,10 +184,99 @@ All colors MUST be HSL.
     padding: 0.75rem 1rem;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    display: table-cell;
   }
 
   .prose tbody tr:nth-child(even) {
     background-color: hsl(var(--muted) / 0.3);
+  }
+
+  /* Mobile responsive table - card layout for screens under 768px */
+  @media screen and (max-width: 767px) {
+    .prose table {
+      border: 0;
+      display: block;
+    }
+
+    .prose table caption {
+      font-size: 1.3em;
+    }
+
+    .prose thead {
+      border: none;
+      clip: rect(0 0 0 0);
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      padding: 0;
+      position: absolute;
+      width: 1px;
+    }
+
+    .prose tr {
+      display: block;
+      margin-bottom: 1rem;
+      border: 1px solid hsl(var(--border));
+      border-radius: 0.5rem;
+      background-color: hsl(var(--card));
+      overflow: hidden;
+    }
+
+    .prose tbody tr:nth-child(even) {
+      background-color: hsl(var(--card));
+    }
+
+    .prose td {
+      border: none;
+      border-bottom: 1px solid hsl(var(--border));
+      display: flex;
+      align-items: flex-start;
+      padding: 0.75rem;
+      text-align: left;
+      min-height: 2.5rem;
+    }
+
+    .prose td:last-child {
+      border-bottom: 0;
+    }
+
+    .prose td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      min-width: 40%;
+      max-width: 40%;
+      padding-right: 1rem;
+      flex-shrink: 0;
+      color: hsl(var(--foreground));
+      word-break: break-word;
+    }
+
+    /* Fallback: If data-label is not set, use a simpler stacked layout */
+    .prose td:not([data-label])::before {
+      display: none;
+    }
+
+    .prose td:not([data-label]) {
+      display: block;
+      padding: 0.75rem 1rem;
+    }
+  }
+
+  /* Tablet responsive - horizontal scroll for screens 768px to 1024px */
+  @media screen and (min-width: 768px) and (max-width: 1024px) {
+    .prose table {
+      display: block;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .prose thead,
+    .prose tbody,
+    .prose tr {
+      display: table;
+      width: 100%;
+      table-layout: auto;
+    }
   }
 
   /* Link styling - make links blue and easily identifiable */

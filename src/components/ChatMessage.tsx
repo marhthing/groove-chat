@@ -103,6 +103,35 @@ export const ChatMessage = ({ role, content, fileName, fileType, imageUrl, isStr
     return text;
   };
 
+  const addDataLabelsToTables = (html: string): string => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const tables = doc.querySelectorAll('table');
+
+    tables.forEach((table) => {
+      const headers: string[] = [];
+      const headerCells = table.querySelectorAll('thead th');
+      
+      headerCells.forEach((th) => {
+        headers.push(th.textContent?.trim() || '');
+      });
+
+      if (headers.length > 0) {
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach((row) => {
+          const cells = row.querySelectorAll('td');
+          cells.forEach((cell, index) => {
+            if (headers[index]) {
+              cell.setAttribute('data-label', headers[index]);
+            }
+          });
+        });
+      }
+    });
+
+    return doc.body.innerHTML;
+  };
+
   const renderContent = (text: string) => {
     // Check for chart metadata first (for chart generation)
     if (chartMetadata?.chartSpec) {
@@ -172,7 +201,9 @@ export const ChatMessage = ({ role, content, fileName, fileType, imageUrl, isStr
     if (!isUser) {
       // Convert math delimiters before parsing
       const processedText = convertMathDelimiters(text);
-      const htmlContent = marked.parse(processedText, { async: false }) as string;
+      let htmlContent = marked.parse(processedText, { async: false }) as string;
+      // Add data-label attributes to table cells for mobile responsiveness
+      htmlContent = addDataLabelsToTables(htmlContent);
       return (
         <div className="relative">
           <div 
