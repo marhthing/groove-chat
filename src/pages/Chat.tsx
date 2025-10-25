@@ -658,23 +658,111 @@ const Chat = () => {
           y: typeof row[yColumn] === 'number' ? row[yColumn] : parseFloat(String(row[yColumn])) || 0
         }));
         
-        chartSpec = {
-          type: chartType,
-          title: `${columns[yColumn]} vs ${columns[xColumn]}`,
-          description: `Chart from ${fileToUse.filename}`,
-          xAxis: {
-            label: columns[xColumn]
-          },
-          yAxis: {
-            label: columns[yColumn]
-          },
-          datasets: [
-            {
-              label: columns[yColumn],
-              data: chartData
+        // Check if prompt contains customization keywords
+        const lowerPrompt = prompt.toLowerCase();
+        const hasCustomization = lowerPrompt.includes('color') || 
+                                  lowerPrompt.includes('dark') || 
+                                  lowerPrompt.includes('bright') ||
+                                  lowerPrompt.includes('change') ||
+                                  lowerPrompt.includes('different') ||
+                                  lowerPrompt.includes('modify') ||
+                                  lowerPrompt.includes('update');
+        
+        if (hasCustomization) {
+          // Use AI to apply customizations to the chart
+          const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+          if (!apiKey) {
+            throw new Error("Service temporary unavailable.");
+          }
+
+          const customizationPrompt = `You are a data visualization assistant. I have a ${chartType} chart showing ${columns[yColumn]} vs ${columns[xColumn]}.
+
+User's customization request: "${prompt}"
+
+Generate a JSON chart specification with these customizations applied. Return ONLY a valid JSON object (no other text):
+{
+  "type": "${chartType}",
+  "title": "Chart title here",
+  "description": "Brief description",
+  "xAxis": {
+    "label": "${columns[xColumn]}"
+  },
+  "yAxis": {
+    "label": "${columns[yColumn]}"
+  },
+  "datasets": [
+    {
+      "label": "${columns[yColumn]}",
+      "color": "HEX_COLOR_HERE (if colors were requested)",
+      "data": ${JSON.stringify(chartData.slice(0, 20))}
+    }
+  ]
+}
+
+IMPORTANT:
+- Apply the user's color customization if requested (use valid hex colors like #2C3E50 for dark colors)
+- Keep the same data structure
+- For dark colors: use colors like #2C3E50, #34495E, #1A252F, #283747
+- For bright colors: use colors like #E74C3C, #3498DB, #F39C12, #9B59B6
+- Return ONLY the JSON object, no markdown or code blocks`;
+
+          const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "llama-3.3-70b-versatile",
+              messages: [
+                {
+                  role: "user",
+                  content: customizationPrompt
+                }
+              ],
+              temperature: 0.3,
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const messageContent = data.choices[0]?.message?.content || "";
+            
+            try {
+              const jsonMatch = messageContent.match(/\{[\s\S]*\}/);
+              if (jsonMatch) {
+                chartSpec = JSON.parse(jsonMatch[0]);
+                // Ensure we use all data, not just the sample
+                if (chartSpec.datasets && chartSpec.datasets[0]) {
+                  chartSpec.datasets[0].data = chartData;
+                }
+              }
+            } catch (parseError) {
+              console.error("Failed to parse customization JSON, using default:", parseError);
             }
-          ]
-        };
+          }
+        }
+        
+        // If no customization or AI call failed, use default chart spec
+        if (!chartSpec) {
+          chartSpec = {
+            type: chartType,
+            title: `${columns[yColumn]} vs ${columns[xColumn]}`,
+            description: `Chart from ${fileToUse.filename}`,
+            xAxis: {
+              label: columns[xColumn]
+            },
+            yAxis: {
+              label: columns[yColumn]
+            },
+            datasets: [
+              {
+                label: columns[yColumn],
+                data: chartData
+              }
+            ]
+          };
+        }
         
         textContent = `Here's your chart from ${fileToUse.filename} showing ${columns[yColumn]} vs ${columns[xColumn]}:`;
       } else {
