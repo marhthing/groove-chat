@@ -96,7 +96,9 @@ const Chat = () => {
   }, [conversationId]);
 
   useEffect(() => {
-    if (currentConversationId) {
+    // Only load messages if we're switching to an existing conversation
+    // Skip loading if we just created this conversation (messages are already in state)
+    if (currentConversationId && messages.length === 0) {
       loadMessages(currentConversationId);
     }
   }, [currentConversationId]);
@@ -821,7 +823,18 @@ Important:
       return;
     }
 
-    // Create conversation if needed FIRST
+    // Show user message IMMEDIATELY in UI (before anything else)
+    const userMessage: Message = {
+      id: crypto.randomUUID(),
+      role: "user",
+      content: content || '', // Display only user's message
+      created_at: new Date().toISOString(),
+      file_name: file?.file.name,
+      file_type: file?.type,
+    };
+    setMessages((prev) => [...prev, userMessage]);
+
+    // Create conversation if needed AFTER showing user message
     let conversationId = currentConversationId;
     if (!conversationId) {
       const { data, error } = await supabase
@@ -844,22 +857,9 @@ Important:
       }
       conversationId = data.id;
       setCurrentConversationId(data.id);
-      navigate(`/chat/${data.id}`);
+      // Navigate without reloading - use replace to avoid history pollution
+      navigate(`/chat/${data.id}`, { replace: true });
     }
-
-    // Show user message IMMEDIATELY in UI (before processing)
-    const userMessage: Message = {
-      id: crypto.randomUUID(),
-      role: "user",
-      content: content || '', // Display only user's message
-      created_at: new Date().toISOString(),
-      file_name: file?.file.name,
-      file_type: file?.type,
-    };
-    setMessages((prev) => [...prev, userMessage]);
-
-    // Force scroll immediately
-    setTimeout(() => scrollToBottom(), 50);
 
     // Process file upload in background (if present)
     let processedDocument = null;
